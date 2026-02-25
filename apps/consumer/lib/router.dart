@@ -11,7 +11,12 @@ import 'screens/home/home_screen.dart';
 import 'screens/workshops/workshop_list_screen.dart';
 import 'screens/workshops/workshop_detail_screen.dart';
 import 'screens/orders/orders_screen.dart';
+import 'screens/orders/order_tracking_screen.dart';
+import 'screens/orders/rate_workshop_screen.dart';
 import 'screens/marketplace/marketplace_screen.dart';
+import 'screens/marketplace/cart_screen.dart';
+import 'screens/vehicles/vehicle_add_screen.dart';
+import 'screens/chat/chat_detail_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 
@@ -26,11 +31,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => OtpScreen(phone: state.uri.queryParameters['phone'] ?? ''),
       ),
       GoRoute(path: '/profile-setup', builder: (_, _) => const ProfileSetupScreen()),
+
+      // Detail screens (outside shell — no bottom nav)
       GoRoute(
         path: '/workshop/:id',
         builder: (_, state) => WorkshopDetailScreen(workshopId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
+      GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+      GoRoute(path: '/vehicle/add', builder: (_, _) => const VehicleAddScreen()),
+      GoRoute(
+        path: '/order/:id',
+        builder: (_, state) => OrderTrackingScreen(orderId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/rate/:id',
+        builder: (_, state) => RateWorkshopScreen(orderId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/chat/:id',
+        builder: (_, state) => ChatDetailScreen(roomId: state.pathParameters['id']!),
+      ),
+
+      // Main shell (with bottom nav)
       ShellRoute(
         builder: (_, _, child) => HomeShell(child: child),
         routes: [
