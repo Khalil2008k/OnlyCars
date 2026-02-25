@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.9'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: |
+          cd packages/oc_models && flutter pub get
+          cd ../oc_ui && flutter pub get
+          cd ../oc_api && flutter pub get
+          cd ../../apps/consumer && flutter pub get
+          cd ../pro && flutter pub get
+          cd ../admin && flutter pub get
+      
+      - name: Analyze oc_models
+        run: cd packages/oc_models && dart analyze --fatal-infos
+      
+      - name: Analyze oc_api
+        run: cd packages/oc_api && dart analyze --fatal-infos
+      
+      - name: Analyze oc_ui
+        run: cd packages/oc_ui && dart analyze --fatal-infos
+      
+      - name: Test oc_models
+        run: cd packages/oc_models && flutter test
+      
+      - name: Test oc_ui
+        run: cd packages/oc_ui && flutter test

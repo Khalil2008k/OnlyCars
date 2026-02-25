@@ -1,0 +1,19 @@
+name: oc_api
+description: OnlyCars API client - Supabase wrapper
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.8.0
+  oc_models:
+    path: ../oc_models
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0

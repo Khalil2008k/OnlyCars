@@ -1,0 +1,31 @@
+name: onlycars
+repository: https://github.com/Khalil2008k/OnlyCars.git
+
+packages:
+  - apps/*
+  - packages/*
+
+command:
+  bootstrap:
+    usePubspecOverrides: true
+
+scripts:
+  analyze:
+    run: melos exec -- dart analyze .
+    description: Run static analysis on all packages
+  
+  test:
+    run: melos exec -- flutter test
+    packageFilters:
+      flutter: true
+    description: Run tests in all Flutter packages
+
+  build_runner:
+    run: melos exec -- dart run build_runner build --delete-conflicting-outputs
+    description: Run build_runner in all packages
+    packageFilters:
+      dependsOn: build_runner
+
+  clean:
+    run: melos exec -- flutter clean
+    description: Clean all packages

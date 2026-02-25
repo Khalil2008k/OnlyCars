@@ -1,0 +1,44 @@
+name: admin
+description: OnlyCars Admin Dashboard
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # OnlyCars packages
+  oc_models:
+    path: ../../packages/oc_models
+  oc_api:
+    path: ../../packages/oc_api
+  oc_ui:
+    path: ../../packages/oc_ui
+
+  # State + Navigation
+  flutter_riverpod: ^2.6.0
+  riverpod_annotation: ^2.6.0
+  go_router: ^15.1.0
+
+  # Charts
+  fl_chart: ^0.70.0
+
+  # Utilities
+  intl: ^0.20.0
+  data_table_2: ^2.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^2.6.0
+  build_runner: ^2.4.0
+
+flutter:
+  uses-material-design: true
+  generate: true

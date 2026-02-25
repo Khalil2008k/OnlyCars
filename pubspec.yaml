@@ -1,0 +1,13 @@
+name: onlycars_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+workspace:
+  - apps/consumer
+  - apps/pro
+  - apps/admin
+  - packages/oc_models
+  - packages/oc_api
+  - packages/oc_ui
