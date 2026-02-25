@@ -4,7 +4,7 @@ part 'config.freezed.dart';
 part 'config.g.dart';
 
 @freezed
-class DeliveryZone with _$DeliveryZone {
+abstract class DeliveryZone with _$DeliveryZone {
   const factory DeliveryZone({
     required String id,
     @JsonKey(name: 'name_ar') required String nameAr,
@@ -20,7 +20,7 @@ class DeliveryZone with _$DeliveryZone {
 }
 
 @freezed
-class PlatformConfig with _$PlatformConfig {
+abstract class PlatformConfig with _$PlatformConfig {
   const factory PlatformConfig({
     required String id,
     required String key,

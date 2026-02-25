@@ -4,7 +4,7 @@ part 'user.freezed.dart';
 part 'user.g.dart';
 
 @freezed
-class OcUser with _$OcUser {
+abstract class OcUser with _$OcUser {
   const factory OcUser({
     required String id,
     required String phone,
@@ -20,7 +20,7 @@ class OcUser with _$OcUser {
 }
 
 @freezed
-class UserRole with _$UserRole {
+abstract class UserRole with _$UserRole {
   const factory UserRole({
     required String id,
     @JsonKey(name: 'user_id') required String userId,
@@ -33,7 +33,7 @@ class UserRole with _$UserRole {
 }
 
 @freezed
-class Address with _$Address {
+abstract class Address with _$Address {
   const factory Address({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

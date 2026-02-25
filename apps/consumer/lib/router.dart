@@ -11,7 +11,6 @@ import 'screens/home/home_screen.dart';
 import 'screens/workshops/workshop_list_screen.dart';
 import 'screens/workshops/workshop_detail_screen.dart';
 import 'screens/orders/orders_screen.dart';
-import 'screens/chat/chat_list_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 
@@ -19,26 +18,26 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     routes: [
-      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: '/otp',
         builder: (_, state) => OtpScreen(phone: state.uri.queryParameters['phone'] ?? ''),
       ),
-      GoRoute(path: '/profile-setup', builder: (_, __) => const ProfileSetupScreen()),
+      GoRoute(path: '/profile-setup', builder: (_, _) => const ProfileSetupScreen()),
       GoRoute(
         path: '/workshop/:id',
         builder: (_, state) => WorkshopDetailScreen(workshopId: state.pathParameters['id']!),
       ),
-      GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
+      GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
       ShellRoute(
-        builder: (_, __, child) => HomeShell(child: child),
+        builder: (_, _, child) => HomeShell(child: child),
         routes: [
-          GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/workshops', builder: (_, __) => const WorkshopListScreen()),
-          GoRoute(path: '/marketplace', builder: (_, __) => const Placeholder()),
-          GoRoute(path: '/orders', builder: (_, __) => const OrdersScreen()),
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
+          GoRoute(path: '/workshops', builder: (_, _) => const WorkshopListScreen()),
+          GoRoute(path: '/marketplace', builder: (_, _) => const Placeholder()),
+          GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
+          GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ],
       ),
     ],

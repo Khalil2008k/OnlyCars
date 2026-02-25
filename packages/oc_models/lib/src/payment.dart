@@ -4,7 +4,7 @@ part 'payment.freezed.dart';
 part 'payment.g.dart';
 
 @freezed
-class Payment with _$Payment {
+abstract class Payment with _$Payment {
   const factory Payment({
     required String id,
     @JsonKey(name: 'order_id') String? orderId,
@@ -22,7 +22,7 @@ class Payment with _$Payment {
 }
 
 @freezed
-class WorkshopBill with _$WorkshopBill {
+abstract class WorkshopBill with _$WorkshopBill {
   const factory WorkshopBill({
     required String id,
     @JsonKey(name: 'workshop_id') required String workshopId,
@@ -40,7 +40,7 @@ class WorkshopBill with _$WorkshopBill {
 }
 
 @freezed
-class Payout with _$Payout {
+abstract class Payout with _$Payout {
   const factory Payout({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

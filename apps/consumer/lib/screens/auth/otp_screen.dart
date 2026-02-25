@@ -205,7 +205,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   onPressed: _resendCooldown == 0 ? _resend : null,
                   child: Text(
                     _resendCooldown > 0
-                        ? 'إعادة الإرسال (${_resendCooldown}ث)'
+                        ? 'إعادة الإرسال ($_resendCooldownث)'
                         : 'إعادة الإرسال',
                     style: TextStyle(
                       color: _resendCooldown > 0

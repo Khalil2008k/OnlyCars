@@ -4,7 +4,7 @@ part 'diagnosis.freezed.dart';
 part 'diagnosis.g.dart';
 
 @freezed
-class DiagnosisReport with _$DiagnosisReport {
+abstract class DiagnosisReport with _$DiagnosisReport {
   const factory DiagnosisReport({
     required String id,
     @JsonKey(name: 'workshop_id') required String workshopId,
@@ -27,7 +27,7 @@ class DiagnosisReport with _$DiagnosisReport {
 }
 
 @freezed
-class DiagnosisPart with _$DiagnosisPart {
+abstract class DiagnosisPart with _$DiagnosisPart {
   const factory DiagnosisPart({
     required String id,
     @JsonKey(name: 'report_id') required String reportId,

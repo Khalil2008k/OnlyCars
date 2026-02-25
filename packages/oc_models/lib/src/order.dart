@@ -4,7 +4,7 @@ part 'order.freezed.dart';
 part 'order.g.dart';
 
 @freezed
-class Order with _$Order {
+abstract class Order with _$Order {
   const factory Order({
     required String id,
     @JsonKey(name: 'consumer_id') required String consumerId,
@@ -30,7 +30,7 @@ class Order with _$Order {
 }
 
 @freezed
-class OrderItem with _$OrderItem {
+abstract class OrderItem with _$OrderItem {
   const factory OrderItem({
     required String id,
     @JsonKey(name: 'order_id') required String orderId,
@@ -49,7 +49,7 @@ class OrderItem with _$OrderItem {
 }
 
 @freezed
-class OrderStatusLog with _$OrderStatusLog {
+abstract class OrderStatusLog with _$OrderStatusLog {
   const factory OrderStatusLog({
     required String id,
     @JsonKey(name: 'order_id') required String orderId,

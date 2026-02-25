@@ -4,7 +4,7 @@ part 'workshop.freezed.dart';
 part 'workshop.g.dart';
 
 @freezed
-class WorkshopProfile with _$WorkshopProfile {
+abstract class WorkshopProfile with _$WorkshopProfile {
   const factory WorkshopProfile({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

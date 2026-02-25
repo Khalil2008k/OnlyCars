@@ -4,7 +4,7 @@ part 'notification.freezed.dart';
 part 'notification.g.dart';
 
 @freezed
-class OcNotification with _$OcNotification {
+abstract class OcNotification with _$OcNotification {
   const factory OcNotification({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

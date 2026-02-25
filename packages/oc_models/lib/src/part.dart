@@ -4,7 +4,7 @@ part 'part.freezed.dart';
 part 'part.g.dart';
 
 @freezed
-class PartCategory with _$PartCategory {
+abstract class PartCategory with _$PartCategory {
   const factory PartCategory({
     required String id,
     @JsonKey(name: 'name_ar') required String nameAr,
@@ -18,7 +18,7 @@ class PartCategory with _$PartCategory {
 }
 
 @freezed
-class Part with _$Part {
+abstract class Part with _$Part {
   const factory Part({
     required String id,
     @JsonKey(name: 'shop_id') required String shopId,
@@ -42,7 +42,7 @@ class Part with _$Part {
 }
 
 @freezed
-class PartVehicleCompat with _$PartVehicleCompat {
+abstract class PartVehicleCompat with _$PartVehicleCompat {
   const factory PartVehicleCompat({
     required String id,
     @JsonKey(name: 'part_id') required String partId,

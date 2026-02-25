@@ -4,7 +4,7 @@ part 'chat.freezed.dart';
 part 'chat.g.dart';
 
 @freezed
-class ChatRoom with _$ChatRoom {
+abstract class ChatRoom with _$ChatRoom {
   const factory ChatRoom({
     required String id,
     @JsonKey(name: 'participant_1') required String participant1,
@@ -22,7 +22,7 @@ class ChatRoom with _$ChatRoom {
 }
 
 @freezed
-class ChatMessage with _$ChatMessage {
+abstract class ChatMessage with _$ChatMessage {
   const factory ChatMessage({
     required String id,
     @JsonKey(name: 'room_id') required String roomId,

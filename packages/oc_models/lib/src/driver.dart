@@ -4,7 +4,7 @@ part 'driver.freezed.dart';
 part 'driver.g.dart';
 
 @freezed
-class DriverProfile with _$DriverProfile {
+abstract class DriverProfile with _$DriverProfile {
   const factory DriverProfile({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

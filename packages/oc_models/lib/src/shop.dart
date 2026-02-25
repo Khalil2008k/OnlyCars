@@ -4,7 +4,7 @@ part 'shop.freezed.dart';
 part 'shop.g.dart';
 
 @freezed
-class ShopProfile with _$ShopProfile {
+abstract class ShopProfile with _$ShopProfile {
   const factory ShopProfile({
     required String id,
     @JsonKey(name: 'user_id') required String userId,

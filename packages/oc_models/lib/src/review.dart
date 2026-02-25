@@ -4,7 +4,7 @@ part 'review.freezed.dart';
 part 'review.g.dart';
 
 @freezed
-class Review with _$Review {
+abstract class Review with _$Review {
   const factory Review({
     required String id,
     @JsonKey(name: 'consumer_id') required String consumerId,

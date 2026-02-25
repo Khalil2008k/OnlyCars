@@ -4,7 +4,7 @@ part 'car_health_record.freezed.dart';
 part 'car_health_record.g.dart';
 
 @freezed
-class CarHealthRecord with _$CarHealthRecord {
+abstract class CarHealthRecord with _$CarHealthRecord {
   const factory CarHealthRecord({
     required String id,
     @JsonKey(name: 'vehicle_id') required String vehicleId,
