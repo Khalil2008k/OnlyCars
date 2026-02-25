@@ -87,3 +87,35 @@ final diagnosisReportsProvider = FutureProvider<List<DiagnosisReport>>((ref) asy
   final service = ref.read(diagnosisServiceProvider);
   return await service.getConsumerReports();
 });
+
+// ===== PARTS (filtered by category) =====
+final partsProvider = FutureProvider.family<List<Part>, String?>((ref, categoryId) async {
+  final service = ref.read(partsServiceProvider);
+  return await service.getParts(categoryId: categoryId);
+});
+
+// ===== CART =====
+class CartNotifier extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => {};
+
+  void add(String partId) {
+    state = {...state, partId: (state[partId] ?? 0) + 1};
+  }
+
+  void remove(String partId) {
+    final updated = {...state};
+    if ((updated[partId] ?? 0) > 1) {
+      updated[partId] = updated[partId]! - 1;
+    } else {
+      updated.remove(partId);
+    }
+    state = updated;
+  }
+
+  void clear() => state = {};
+
+  int get totalItems => state.values.fold(0, (a, b) => a + b);
+}
+
+final cartProvider = NotifierProvider<CartNotifier, Map<String, int>>(CartNotifier.new);

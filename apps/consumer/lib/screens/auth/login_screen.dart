@@ -116,20 +116,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       letterSpacing: 4,
                     ),
                     decoration: InputDecoration(
-                      prefixIcon: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const Row(
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(left: 12, right: 8),
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '🇶🇦',
-                              style: TextStyle(fontSize: 24),
-                            ),
-                            SizedBox(width: 8),
+                            Text('🇶🇦', style: TextStyle(fontSize: 20)),
+                            SizedBox(width: 6),
                             Text(
                               '+974',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                                 color: OcColors.textSecondary,
                               ),
@@ -137,6 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
+                      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                       counterText: '',
                       hintText: '3XXXXXXX',
                       hintStyle: const TextStyle(
@@ -172,6 +170,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _sendOtp,
                   isLoading: _isLoading,
                   icon: Icons.sms_outlined,
+                ),
+
+                const SizedBox(height: OcSpacing.md),
+
+                // Dev skip button — remove in production
+                TextButton(
+                  onPressed: () => context.go('/home'),
+                  child: const Text(
+                    'تخطي (وضع التطوير)',
+                    style: TextStyle(color: OcColors.textSecondary, fontSize: 13),
+                  ),
                 ),
 
                 const Spacer(flex: 3),

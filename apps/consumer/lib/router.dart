@@ -11,6 +11,7 @@ import 'screens/home/home_screen.dart';
 import 'screens/workshops/workshop_list_screen.dart';
 import 'screens/workshops/workshop_detail_screen.dart';
 import 'screens/orders/orders_screen.dart';
+import 'screens/marketplace/marketplace_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 
@@ -35,16 +36,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: '/home', builder: (_, _) => const HomeScreen()),
           GoRoute(path: '/workshops', builder: (_, _) => const WorkshopListScreen()),
-          GoRoute(path: '/marketplace', builder: (_, _) => const Placeholder()),
+          GoRoute(path: '/marketplace', builder: (_, _) => const MarketplaceScreen()),
           GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
           GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ],
       ),
     ],
     redirect: (context, state) {
-      final isAuth = OcSupabase.isAuthenticated;
-      final authRoutes = ['/login', '/otp', '/splash', '/profile-setup'];
-      if (!isAuth && !authRoutes.contains(state.matchedLocation)) return '/login';
+      // TODO: Re-enable auth guard for production
+      // final isAuth = OcSupabase.isAuthenticated;
+      // final authRoutes = ['/login', '/otp', '/splash', '/profile-setup'];
+      // if (!isAuth && !authRoutes.contains(state.matchedLocation)) return '/login';
       return null;
     },
   );
