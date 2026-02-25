@@ -15,6 +15,9 @@ import 'screens/orders/order_tracking_screen.dart';
 import 'screens/orders/rate_workshop_screen.dart';
 import 'screens/marketplace/marketplace_screen.dart';
 import 'screens/marketplace/cart_screen.dart';
+import 'screens/marketplace/part_detail_screen.dart';
+import 'screens/marketplace/shop_profile_screen.dart';
+import 'screens/orders/workshop_bill_screen.dart';
 import 'screens/vehicles/vehicle_add_screen.dart';
 import 'screens/chat/chat_detail_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -47,6 +50,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/rate/:id',
         builder: (_, state) => RateWorkshopScreen(orderId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/part/:id',
+        builder: (_, state) => PartDetailScreen(partId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/shop/:id',
+        builder: (_, state) => ShopProfileScreen(shopId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/bill/:id',
+        builder: (_, state) => WorkshopBillScreen(billId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/chat/:id',
