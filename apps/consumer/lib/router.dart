@@ -24,6 +24,8 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/diagnosis/diagnosis_report_screen.dart';
 import 'screens/shared/force_update_screen.dart';
 import 'screens/shared/about_screen.dart';
+import 'screens/payment/payment_success_screen.dart';
+import 'screens/payment/payment_failed_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -32,6 +34,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(path: '/force-update', builder: (_, _) => const ForceUpdateScreen()),
       GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
+      GoRoute(
+        path: '/payment/success',
+        builder: (_, state) => PaymentSuccessScreen(orderId: state.uri.queryParameters['order']),
+      ),
+      GoRoute(
+        path: '/payment/failed',
+        builder: (_, state) => PaymentFailedScreen(orderId: state.uri.queryParameters['order']),
+      ),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: '/otp',
