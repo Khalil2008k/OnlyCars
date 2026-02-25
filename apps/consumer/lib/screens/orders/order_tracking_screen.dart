@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
-import '../../providers.dart';
 
 class OrderTrackingScreen extends ConsumerWidget {
   final String orderId;
