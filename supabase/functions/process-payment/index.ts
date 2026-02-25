@@ -113,8 +113,8 @@ serve(async (req: Request) => {
                 },
                 items: lineItems,
                 callback_url: `${supabaseUrl}/functions/v1/payment-callback`,
-                success_url: `https://onlycars.qa/payment/success?order=${body.order_id}`,
-                failure_url: `https://onlycars.qa/payment/failed?order=${body.order_id}`,
+                success_url: `https://onlycars-mrya.onrender.com/#/payment/success?order=${body.order_id}`,
+                failure_url: `https://onlycars-mrya.onrender.com/#/payment/failed?order=${body.order_id}`,
                 metadata: {
                     order_id: body.order_id,
                     user_id: user.id,
