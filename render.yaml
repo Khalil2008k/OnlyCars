@@ -1,13 +1,12 @@
 # render.yaml — Render Blueprint for OnlyCars Consumer Web App
-# Deploy: Connect this repo to Render, it auto-detects this file
+# Pre-built Flutter web output (no build step needed on Render)
 
 services:
   - type: web
-    name: onlycars-consumer
+    name: onlycars
     runtime: static
-    buildCommand: |
-      cd apps/consumer && flutter build web --release --dart-define=SUPABASE_URL=https://wfzwrcqpjrzqpgawiess.supabase.co --dart-define=SUPABASE_ANON_KEY=sb_publishable_rhKJKH0_O6iojpAOSw97Yw_wnDBczgX
-    staticPublishPath: apps/consumer/build/web
+    buildCommand: ""
+    staticPublishPath: web-deploy
     headers:
       - path: /*
         name: X-Frame-Options
@@ -19,6 +18,3 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: FLUTTER_VERSION
-        value: "3.32.0"
