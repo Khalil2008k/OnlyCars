@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "778060752352",
+    "project_id": "onlycars-c1fd0",
+    "storage_bucket": "onlycars-c1fd0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778060752352:android:f4ce62bc10d9195608b785",
+        "android_client_info": {
+          "package_name": "com.onlycars.consumer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0hZJ6J9dpe6YDo1X1369BnupT10n_3P4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778060752352:android:80b5732d3cf0a7d108b785",
+        "android_client_info": {
+          "package_name": "com.onlycars.pro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0hZJ6J9dpe6YDo1X1369BnupT10n_3P4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

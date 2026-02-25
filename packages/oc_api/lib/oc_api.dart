@@ -1,5 +1,7 @@
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+/// OnlyCars API Client
+///
+/// Provides all services for communicating with the Supabase backend.
+library oc_api;
+
+export 'src/supabase_client.dart';
+export 'src/auth_service.dart';
