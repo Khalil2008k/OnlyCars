@@ -22,12 +22,16 @@ import 'screens/chat/chat_detail_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/diagnosis/diagnosis_report_screen.dart';
+import 'screens/shared/force_update_screen.dart';
+import 'screens/shared/about_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/force-update', builder: (_, _) => const ForceUpdateScreen()),
+      GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: '/otp',
