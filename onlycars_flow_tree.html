@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyCars — User Flow Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Tajawal', 'Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#fef2f4', 100: '#fde6e9', 200: '#fbd0d8', 300: '#f7aabb', 400: '#f27a97', 500: '#e94560', 600: '#d6254a', 700: '#b91c3c', 800: '#9b1a37', 900: '#841934' },
+                        surface: { 50: '#f8fafc', 100: '#eef2f7', 200: '#dde4ed', 300: '#b4c0d0', 400: '#8494aa', 800: '#141b2d', 850: '#111827', 900: '#0b1120', 950: '#060a14' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: #060a14;
+            overflow-x: hidden
+        }
+
+        .glass {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06)
+        }
+
+        .glass-light {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05)
+        }
+
+        .glow {
+            box-shadow: 0 0 60px -12px rgba(233, 69, 96, 0.15)
+        }
+
+        .glow-blue {
+            box-shadow: 0 0 40px -12px rgba(59, 130, 246, 0.2)
+        }
+
+        .glow-purple {
+            box-shadow: 0 0 40px -12px rgba(139, 92, 246, 0.2)
+        }
+
+        .glow-emerald {
+            box-shadow: 0 0 40px -12px rgba(16, 185, 129, 0.2)
+        }
+
+        .glow-amber {
+            box-shadow: 0 0 40px -12px rgba(245, 158, 11, 0.2)
+        }
+
+        .connector {
+            width: 2px;
+            height: 40px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(233, 69, 96, 0.6), rgba(233, 69, 96, 0.15))
+        }
+
+        .connector-blue {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(59, 130, 246, 0.15))
+        }
+
+        .connector-purple {
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(139, 92, 246, 0.15))
+        }
+
+        .arrow-tip {
+            width: 0;
+            height: 0;
+            margin: 0 auto;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid rgba(233, 69, 96, 0.6)
+        }
+
+        .tag {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 6px;
+            display: inline-block
+        }
+
+        .fade-in {
+            animation: fadeUp .6s ease both
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(233, 69, 96, 0.1)
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(233, 69, 96, 0.2)
+            }
+        }
+
+        .card-hover {
+            transition: all .3s cubic-bezier(.4, 0, .2, 1)
+        }
+
+        .card-hover:hover {
+            transform: translateY(-2px);
+            border-color: rgba(233, 69, 96, 0.2)
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px
+        }
+
+        @media print {
+            body {
+                background: #fff !important
+            }
+
+            .glass,
+            .glass-light {
+                background: #f9fafb !important;
+                backdrop-filter: none !important;
+                border-color: #e5e7eb !important
+            }
+
+            .page-break {
+                page-break-before: always
+            }
+
+            .no-print {
+                display: none !important
+            }
+
+            .connector {
+                background: #d1d5db !important
+            }
+
+            .arrow-tip {
+                border-top-color: #d1d5db !important
+            }
+
+            * {
+                color: #111 !important
+            }
+
+            .section-num {
+                background: #f3f4f6 !important;
+                color: #374151 !important
+            }
+        }
+    </style>
+</head>
+
+<body class="text-surface-300 font-sans">
+
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 no-print">
+        <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                        <path
+                            d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-1h3.05a2.5 2.5 0 014.9 0H19a1 1 0 001-1v-5a1 1 0 00-.293-.707l-3-3A1 1 0 0016 4H3z" />
+                    </svg>
+                </div>
+                <span class="text-white font-bold text-sm tracking-wide">OnlyCars</span>
+                <span class="text-surface-400 text-xs">/</span>
+                <span class="text-surface-400 text-xs">User Flow Architecture</span>
+            </div>
+            <button onclick="window.print()"
+                class="px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-surface-300 font-medium transition">Export
+                PDF</button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="pt-28 pb-16 px-6 text-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-brand-500/5 via-transparent to-transparent"></div>
+        <div class="relative">
+            <!-- LOGO CONCEPT -->
+            <div class="mb-8">
+                <img src="onlycars_logo_concept.png" alt="OnlyCars Logo Concept" class="mx-auto h-24 object-contain"
+                    style="filter: drop-shadow(0 0 30px rgba(233,69,96,0.15));">
+                <div class="mt-3 inline-block">
+                    <span
+                        class="px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-semibold uppercase tracking-wider border border-amber-500/20">Concept
+                        &mdash; Color is customizable</span>
+                </div>
+            </div>
+            <div class="inline-block mb-6">
+                <span class="tag bg-brand-500/10 text-brand-400 border border-brand-500/20">Flow Architecture
+                    v2.0</span>
+            </div>
+            <h1 class="text-5xl font-black text-white mb-3 tracking-tight">OnlyCars</h1>
+            <p class="text-lg text-surface-400 font-light">Complete User Flow Architecture</p>
+            <p class="text-sm text-surface-400/60 mt-2 font-mono">43 screens &middot; 3 applications &middot; Qatar</p>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="max-w-2xl mx-auto px-6 pb-32">
+
+        <!-- ====== SECTION 1: AUTH ====== -->
+        <section class="mb-20" id="auth">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 text-sm font-bold flex items-center justify-center border border-brand-500/20">01</span>
+                <h2 class="text-xl font-bold text-white">Authentication</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">تسجيل الدخول</span>
+            </div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-2 h-2 rounded-full bg-brand-400"></div>
+                    <h3 class="text-white font-bold text-lg">Splash</h3>
+                    <span class="text-surface-400/50 text-xs font-mono">البداية</span>
+                </div>
+                <p class="text-surface-400 text-sm">Application entry &middot; Logo &middot; Version check</p>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover border-brand-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path
+                            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01" />
+                    </svg>
+                    <h3 class="text-white font-bold">Decision &mdash; Authenticated?</h3>
+                    <span class="text-surface-400/50 text-xs font-mono">مسجل دخول؟</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <div class="text-center mb-3"><span
+                            class="tag bg-red-500/10 text-red-400 border border-red-500/20">No</span></div>
+                    <div class="glass-light rounded-2xl p-5 card-hover">
+                        <h4 class="text-white font-semibold mb-2">Login</h4>
+                        <p class="text-xs text-surface-400/50 mb-3 font-mono">تسجيل الدخول</p>
+                        <ul class="space-y-2 text-sm text-surface-300">
+                            <li class="flex items-center gap-2"><span class="dot bg-blue-400"></span>Phone number input
+                            </li>
+                            <li class="flex items-center gap-2"><span class="dot bg-blue-400"></span>Language toggle: AR
+                                / EN</li>
+                        </ul>
+                    </div>
+                    <div class="connector connector-blue"></div>
+                    <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                    <div class="glass-light rounded-2xl p-5 card-hover">
+                        <h4 class="text-white font-semibold mb-2">OTP Verification</h4>
+                        <p class="text-xs text-surface-400/50 mb-3 font-mono">تأكيد الرمز</p>
+                        <ul class="space-y-2 text-sm text-surface-300">
+                            <li class="flex items-center gap-2"><span class="dot bg-blue-400"></span>6-digit code entry
+                            </li>
+                            <li class="flex items-center gap-2"><span class="dot bg-blue-400"></span>60s resend timer
+                            </li>
+                            <li class="flex items-center gap-2"><span class="dot bg-red-400"></span>Error: retry on
+                                invalid code</li>
+                        </ul>
+                    </div>
+                    <div class="connector connector-blue"></div>
+                    <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                    <div class="glass-light rounded-2xl p-5 card-hover">
+                        <h4 class="text-white font-semibold mb-2">Profile Setup</h4>
+                        <p class="text-xs text-surface-400/50 mb-3 font-mono">إعداد الملف — first time only</p>
+                        <ul class="space-y-2 text-sm text-surface-300">
+                            <li class="flex items-center gap-2"><span class="dot bg-purple-400"></span>Name</li>
+                            <li class="flex items-center gap-2"><span class="dot bg-purple-400"></span>Avatar</li>
+                            <li class="flex items-center gap-2"><span class="dot bg-purple-400"></span>Preferred
+                                language</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-center mb-3"><span
+                            class="tag bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Yes</span></div>
+                    <div class="glass-light rounded-2xl p-8 card-hover text-center">
+                        <h4 class="text-emerald-400 font-bold text-lg">Home</h4>
+                        <p class="text-sm text-surface-400 mt-1 font-mono">الرئيسية</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector" style="height:50px"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-blue border-blue-500/10">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                    <h3 class="text-white font-bold text-lg">Home Dashboard</h3>
+                    <span class="text-surface-400/50 text-xs font-mono">الرئيسية</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white/[0.03] rounded-xl p-3 text-sm"><span class="text-blue-400 font-semibold">My
+                            Cars</span><br><span class="text-surface-400 text-xs">سياراتي</span></div>
+                    <div class="bg-white/[0.03] rounded-xl p-3 text-sm"><span class="text-purple-400 font-semibold">New
+                            Reports</span><br><span class="text-surface-400 text-xs">تقارير جديدة</span></div>
+                    <div class="bg-white/[0.03] rounded-xl p-3 text-sm"><span
+                            class="text-amber-400 font-semibold">Active Orders</span><br><span
+                            class="text-surface-400 text-xs">طلبات نشطة</span></div>
+                    <div class="bg-white/[0.03] rounded-xl p-3 text-sm"><span
+                            class="text-brand-400 font-semibold">Notifications</span><br><span
+                            class="text-surface-400 text-xs">الإشعارات</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 2: WORKSHOP MAP ====== -->
+        <section class="mb-20 page-break" id="map">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 text-sm font-bold flex items-center justify-center border border-purple-500/20">02</span>
+                <h2 class="text-xl font-bold text-white">Workshop Discovery</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">خريطة الورش</span>
+            </div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-purple border-purple-500/10">
+                <h3 class="text-white font-bold text-lg mb-1">Workshop Map</h3>
+                <p class="text-xs text-surface-400/50 mb-4 font-mono">خريطة الورش</p>
+                <ul class="space-y-2 text-sm text-surface-300">
+                    <li class="flex items-center gap-2"><span class="dot bg-purple-400"></span>All Qatar workshops
+                        displayed as map pins</li>
+                    <li class="flex items-center gap-2"><span class="dot bg-emerald-400"></span>Status indicator: <span
+                            class="text-emerald-400 font-mono text-xs">OPEN</span> / <span
+                            class="text-red-400 font-mono text-xs">CLOSED</span></li>
+                    <li class="flex items-center gap-2"><span class="dot bg-amber-400"></span>Star rating visible on
+                        each pin</li>
+                </ul>
+                <hr class="border-white/5 my-4">
+                <p class="text-xs text-surface-400 font-semibold mb-2">FILTERS</p>
+                <div class="flex flex-wrap gap-2">
+                    <span
+                        class="px-3 py-1 rounded-full bg-white/5 text-xs text-surface-300 border border-white/5">Specialty
+                        — التخصص</span>
+                    <span
+                        class="px-3 py-1 rounded-full bg-white/5 text-xs text-surface-300 border border-white/5">Rating
+                        — التقييم</span>
+                    <span
+                        class="px-3 py-1 rounded-full bg-white/5 text-xs text-surface-300 border border-white/5">Distance
+                        — المسافة</span>
+                </div>
+            </div>
+
+            <div class="connector connector-purple"></div>
+            <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+            <div class="text-center mb-3"><span
+                    class="tag bg-purple-500/10 text-purple-400 border border-purple-500/20">Tap workshop pin</span>
+            </div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-purple border-purple-500/10">
+                <h3 class="text-white font-bold text-lg mb-1">Workshop Profile</h3>
+                <p class="text-xs text-surface-400/50 mb-4 font-mono">ملف الورشة</p>
+                <div class="space-y-3 text-sm text-surface-300">
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">MEDIA</p>
+                        <p>Cover photo &middot; Interior/exterior gallery</p>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">DETAILS</p>
+                        <ul class="space-y-1">
+                            <li>Name &middot; Verified badge &middot; Workshop code: <span
+                                    class="font-mono text-brand-400">WS-4821</span></li>
+                            <li>Specialties: Electrical, Mechanical, Body, AC</li>
+                            <li>التخصصات: كهرباء، ميكانيك، بودي، تكييف</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">OPERATIONS</p>
+                        <ul class="space-y-1">
+                            <li>Location: Zone / Street / Building</li>
+                            <li>Phone &middot; Working hours &middot; Working days</li>
+                            <li>Rating: 4.8/5 &middot; 312 reviews &middot; 285 completed jobs</li>
+                        </ul>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <span
+                            class="flex-1 text-center py-2 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20">Directions</span>
+                        <span
+                            class="flex-1 text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">Call</span>
+                        <span
+                            class="flex-1 text-center py-2 rounded-lg bg-brand-500/10 text-brand-400 text-xs font-semibold border border-brand-500/20">Copy
+                            Code</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector connector-purple" style="height:50px"></div>
+            <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+            <div class="glass-light rounded-2xl p-6 border-amber-500/20 glow-amber text-center">
+                <p class="text-amber-400 font-bold">Offline Step</p>
+                <p class="text-sm text-surface-400 mt-1">User drives to the workshop and hands over the car</p>
+                <p class="text-xs text-surface-400/50 font-mono mt-1">المستخدم يروح بسيارته للورشة</p>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 3: DIAGNOSIS ====== -->
+        <section class="mb-20 page-break" id="diagnosis">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 text-sm font-bold flex items-center justify-center border border-amber-500/20">03</span>
+                <h2 class="text-xl font-bold text-white">Diagnosis Report</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">تقرير الفحص</span>
+            </div>
+
+            <div class="glass-light rounded-xl p-4 mb-4 border-amber-500/20 text-center">
+                <p class="text-amber-400 text-sm font-semibold">Push Notification: New diagnosis report from workshop
+                </p>
+            </div>
+
+            <div class="connector" style="height:20px"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow border-brand-500/10">
+                <h3 class="text-white font-bold text-lg mb-1">Diagnosis Report</h3>
+                <p class="text-xs text-surface-400/50 mb-4 font-mono">تقرير الفحص من الورشة</p>
+                <div class="space-y-3 text-sm">
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">VEHICLE</p>
+                        <p class="text-surface-300">Toyota Camry 2023 &middot; Workshop: ورشة الريان</p>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-red-400/80 font-semibold mb-2">ISSUES FOUND</p>
+                        <ul class="space-y-1 text-surface-300">
+                            <li>1. Oil filter damaged — فلتر زيت تالف</li>
+                            <li>2. Front brakes weak — فرامل أمامية ضعيفة</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">REQUIRED PARTS</p>
+                        <ul class="space-y-1 text-surface-300">
+                            <li>Oil filter &times;1 &middot; Front brakes &times;2</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-4">
+                        <p class="text-xs text-surface-400/60 font-semibold mb-2">LABOR COST</p>
+                        <p class="text-white font-bold text-lg">350 <span class="text-sm text-surface-400">QAR</span>
+                        </p>
+                    </div>
+                    <p class="text-xs text-surface-400">Evidence photos attached</p>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-xl p-4 border-brand-500/20 text-center">
+                <p class="text-white font-semibold">User Decision — قرار المستخدم</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-4">
+                <div class="text-center">
+                    <span
+                        class="tag bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3">Approve</span>
+                    <div class="connector" style="height:20px;margin-top:12px"></div>
+                    <div class="arrow-tip"></div>
+                    <div class="glass-light rounded-xl p-4 text-center mt-1">
+                        <p class="text-emerald-400 font-bold text-sm">Parts Marketplace</p>
+                        <p class="text-xs text-surface-400 font-mono">سوق القطع</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <span class="tag bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3">Negotiate</span>
+                    <div class="connector connector-blue" style="height:20px;margin-top:12px"></div>
+                    <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                    <div class="glass-light rounded-xl p-4 mt-1">
+                        <p class="text-blue-400 font-bold text-sm">Chat</p>
+                        <p class="text-xs text-surface-400 font-mono">المحادثة</p>
+                        <ul class="text-xs text-surface-400 mt-2 space-y-1 text-right">
+                            <li>Text messages</li>
+                            <li>Photos &middot; Voice</li>
+                            <li>Realtime</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <span class="tag bg-red-500/10 text-red-400 border border-red-500/20 mb-3">Reject</span>
+                    <div class="connector"
+                        style="height:20px;margin-top:12px;background:linear-gradient(180deg,rgba(239,68,68,0.6),rgba(239,68,68,0.15))">
+                    </div>
+                    <div class="arrow-tip" style="border-top-color:rgba(239,68,68,0.6)"></div>
+                    <div class="glass-light rounded-xl p-4 text-center mt-1">
+                        <p class="text-red-400 font-bold text-sm">Back to Home</p>
+                        <p class="text-xs text-surface-400 font-mono">الرئيسية</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 4: MARKETPLACE ====== -->
+        <section class="mb-20 page-break" id="marketplace">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 text-sm font-bold flex items-center justify-center border border-brand-500/20">04</span>
+                <h2 class="text-xl font-bold text-white">Parts Marketplace</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">سوق القطع</span>
+            </div>
+
+            <div class="glass rounded-xl p-4 border-brand-500/20 text-center mb-4">
+                <p class="text-white font-semibold">Search Method — طريقة البحث</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-center mb-3"><span
+                            class="tag bg-blue-500/10 text-blue-400 border border-blue-500/20">List View</span></div>
+                    <div class="glass-light rounded-2xl p-5 card-hover">
+                        <h4 class="text-white font-semibold mb-3">Parts Search — List</h4>
+                        <p class="text-xs text-surface-400/50 mb-3 font-mono">بحث قائمة</p>
+                        <ul class="space-y-2 text-sm text-surface-300">
+                            <li><span class="dot bg-blue-400"></span>Search by name</li>
+                            <li><span class="dot bg-blue-400"></span>Filter: my car, condition, price, rating</li>
+                            <li><span class="dot bg-blue-400"></span>Results with shop name + availability</li>
+                        </ul>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-center mb-3"><span
+                            class="tag bg-purple-500/10 text-purple-400 border border-purple-500/20">Map View</span>
+                    </div>
+                    <div class="glass-light rounded-2xl p-5 card-hover">
+                        <h4 class="text-white font-semibold mb-3">Parts Search — Map</h4>
+                        <p class="text-xs text-surface-400/50 mb-3 font-mono">خريطة المحلات</p>
+                        <ul class="space-y-2 text-sm text-surface-300">
+                            <li><span class="dot bg-purple-400"></span>Shops as map pins</li>
+                            <li><span class="dot bg-purple-400"></span>Color-coded by availability</li>
+                            <li><span class="dot bg-purple-400"></span>Tap pin → shop inventory</li>
+                        </ul>
+                    </div>
+                    <div class="connector connector-purple"></div>
+                    <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+                    <div class="glass-light rounded-xl p-4 card-hover">
+                        <h4 class="text-white font-semibold text-sm">Shop Profile — ملف المتجر</h4>
+                        <p class="text-xs text-surface-400 mt-1">Cover, gallery, brands, rating, inventory</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+            <div class="text-center mb-3"><span
+                    class="tag bg-brand-500/10 text-brand-400 border border-brand-500/20">Select part</span></div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow border-brand-500/10">
+                <h3 class="text-white font-bold mb-3">Part Detail — تفاصيل القطعة</h3>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="bg-white/[0.03] rounded-xl p-3">
+                        <p class="text-xs text-surface-400/60 font-semibold">PRODUCT</p>
+                        <p class="text-surface-300 mt-1">OEM Oil Filter — فلتر زيت أصلي</p>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-3">
+                        <p class="text-xs text-surface-400/60 font-semibold">PRICE</p>
+                        <p class="text-white font-bold mt-1">45 <span class="text-surface-400 text-xs">QAR</span></p>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-3">
+                        <p class="text-xs text-surface-400/60 font-semibold">SHOP</p>
+                        <p class="text-surface-300 mt-1">محل الفهد &middot; 4.5 rating</p>
+                    </div>
+                    <div class="bg-white/[0.03] rounded-xl p-3">
+                        <p class="text-xs text-surface-400/60 font-semibold">COMPATIBILITY</p>
+                        <p class="text-surface-300 mt-1">Camry 2020–2024</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-blue border-blue-500/10">
+                <h3 class="text-white font-bold mb-3">Cart — السلة</h3>
+                <div class="bg-white/[0.03] rounded-xl p-4 text-sm space-y-2">
+                    <div class="flex justify-between text-surface-300"><span>Oil filter &times;1 — محل الفهد</span><span
+                            class="text-white font-mono">45 QAR</span></div>
+                    <div class="flex justify-between text-surface-300"><span>Brakes &times;2 — قطع الخليج</span><span
+                            class="text-white font-mono">280 QAR</span></div>
+                </div>
+                <div class="bg-brand-500/5 border border-brand-500/20 rounded-xl p-4 mt-3">
+                    <p class="text-xs text-brand-400 font-semibold mb-1">WORKSHOP CODE</p>
+                    <p class="text-white font-mono">WS-4821 (paste or type)</p>
+                </div>
+                <hr class="border-white/5 my-3">
+                <div class="flex justify-between text-sm"><span class="text-surface-400">Parts</span><span
+                        class="text-white font-mono">325 QAR</span></div>
+                <div class="flex justify-between text-sm mt-1"><span class="text-surface-400">Delivery</span><span
+                        class="text-white font-mono">25 QAR</span></div>
+                <div class="flex justify-between text-sm mt-2 pt-2 border-t border-white/5"><span
+                        class="text-white font-bold">Total</span><span class="text-white font-bold font-mono">350
+                        QAR</span></div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover border-emerald-500/20 glow-emerald">
+                <h3 class="text-white font-bold mb-2">Sadad Payment — الدفع</h3>
+                <p class="text-sm text-surface-300">Delivery to: Workshop (auto-filled from code)</p>
+                <p class="text-sm text-surface-400 mt-1">Amount held in escrow until delivery confirmed</p>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
+                        <p class="text-emerald-400 font-bold text-sm">Success</p>
+                        <p class="text-xs text-surface-400">Order #OC-5821 created</p>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                        <p class="text-red-400 font-bold text-sm">Failed</p>
+                        <p class="text-xs text-surface-400">Retry payment</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 5: ORDER TRACKING ====== -->
+        <section class="mb-20 page-break" id="tracking">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center border border-emerald-500/20">05</span>
+                <h2 class="text-xl font-bold text-white">Order Tracking + Bill</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">تتبع الطلب + الفاتورة</span>
+            </div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-blue border-blue-500/10">
+                <h3 class="text-white font-bold mb-4">Order Timeline — تتبع الطلب</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                        </div><span class="text-emerald-400">Order placed — تم الطلب</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                        </div><span class="text-emerald-400">Shop preparing — المتجر يجهز</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></div>
+                        </div><span class="text-blue-400">Driver en route — السائق في الطريق</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-surface-400/30"></div>
+                        </div><span class="text-surface-400/50">Delivered to workshop</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-surface-400/30"></div>
+                        </div><span class="text-surface-400/50">Workshop installing</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-surface-400/30"></div>
+                        </div><span class="text-surface-400/50">Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+            <div class="text-center mb-3"><span
+                    class="tag bg-amber-500/10 text-amber-400 border border-amber-500/20">Installation complete</span>
+            </div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow border-brand-500/10">
+                <h3 class="text-white font-bold mb-3">Workshop Bill — فاتورة الورشة</h3>
+                <div class="bg-white/[0.03] rounded-xl p-4 text-sm space-y-1 text-surface-300">
+                    <p>Work: Oil filter replacement + front brakes</p>
+                    <p>Before/after photos attached</p>
+                </div>
+                <div class="bg-white/[0.03] rounded-xl p-4 mt-3 text-center">
+                    <p class="text-xs text-surface-400/60 font-semibold">LABOR COST</p>
+                    <p class="text-white font-bold text-2xl mt-1">350 <span class="text-sm text-surface-400">QAR</span>
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
+                        <p class="text-emerald-400 font-bold text-sm">Approve + Pay</p>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-center">
+                        <p class="text-red-400 font-bold text-sm">Dispute</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="glass rounded-2xl p-6 card-hover glow-emerald border-emerald-500/20">
+                <h3 class="text-emerald-400 font-bold mb-3">Escrow Released — المبالغ تتحرر</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between text-surface-300"><span>Shop (parts cost)</span><span
+                            class="text-white font-mono">325 QAR</span></div>
+                    <div class="flex justify-between text-surface-300"><span>Driver (delivery)</span><span
+                            class="text-white font-mono">25 QAR</span></div>
+                    <div class="flex justify-between text-surface-300"><span>Workshop (labor)</span><span
+                            class="text-white font-mono">350 QAR</span></div>
+                </div>
+            </div>
+
+            <div class="connector"></div>
+            <div class="arrow-tip"></div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-light rounded-xl p-4 text-center">
+                    <p class="text-amber-400 font-bold text-sm">Rate Workshop</p>
+                    <p class="text-xs text-surface-400 mt-1">تقييم الورشة</p>
+                </div>
+                <div class="glass-light rounded-xl p-4 text-center">
+                    <p class="text-purple-400 font-bold text-sm">Car Health Vault</p>
+                    <p class="text-xs text-surface-400 mt-1">سجل السيارة — Hash verified</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 6: WORKSHOP MODE ====== -->
+        <section class="mb-20 page-break" id="workshop-mode">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 text-sm font-bold flex items-center justify-center border border-purple-500/20">06</span>
+                <h2 class="text-xl font-bold text-white">Pro: Workshop Mode</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">وضع الورشة</span>
+            </div>
+
+            <div class="space-y-1">
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Dashboard — لوحة الورشة</h4>
+                    <p class="text-sm text-surface-400 mt-1">Active jobs, weekly earnings, job queue</p>
+                </div>
+                <div class="connector connector-purple"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Find Customer — البحث عن المستخدم</h4>
+                    <p class="text-sm text-surface-400 mt-1">Phone number or QR code, select their vehicle</p>
+                </div>
+                <div class="connector connector-purple"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+                <div class="glass rounded-2xl p-5 card-hover glow-purple border-purple-500/10">
+                    <h4 class="text-white font-semibold">Create Diagnosis Report — إنشاء تقرير</h4>
+                    <p class="text-sm text-surface-400 mt-1">Capture evidence photos, describe issues, list required
+                        parts with quantities, set labor quote</p>
+                </div>
+                <div class="connector connector-purple"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(139,92,246,0.6)"></div>
+                <div class="glass-light rounded-xl p-4 text-center border-amber-500/20">
+                    <p class="text-amber-400 font-semibold text-sm">Waiting for user approval + parts delivery</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Install Parts — تركيب القطع</h4>
+                    <p class="text-sm text-surface-400 mt-1">Mark as in-progress, notify when complete</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass rounded-2xl p-5 card-hover glow border-brand-500/10">
+                    <h4 class="text-white font-semibold">Submit Bill — إرسال الفاتورة</h4>
+                    <p class="text-sm text-surface-400 mt-1">Before/after photos, work description, labor cost</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-xl p-4 text-center border-emerald-500/20">
+                    <p class="text-emerald-400 font-bold text-sm">Payment received — Earnings updated</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 7: DRIVER MODE ====== -->
+        <section class="mb-20 page-break" id="driver-mode">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-bold flex items-center justify-center border border-blue-500/20">07</span>
+                <h2 class="text-xl font-bold text-white">Pro: Driver Mode</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">وضع السائق</span>
+            </div>
+
+            <div class="space-y-1">
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Dashboard — لوحة السائق</h4>
+                    <p class="text-sm text-surface-400 mt-1">Availability toggle, today's earnings, delivery count</p>
+                </div>
+                <div class="connector connector-blue"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Delivery Queue — قائمة التوصيلات</h4>
+                    <p class="text-sm text-surface-400 mt-1">Order details: pickup shop, delivery workshop, items count,
+                        fee, distance</p>
+                </div>
+                <div class="connector connector-blue"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Navigate to Shop — توجه للمتجر</h4>
+                    <p class="text-sm text-surface-400 mt-1">Map + directions, call shop</p>
+                </div>
+                <div class="connector connector-blue"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                <div class="glass rounded-2xl p-5 card-hover glow-blue border-blue-500/10">
+                    <h4 class="text-white font-semibold">Confirm Pickup — تأكيد الاستلام</h4>
+                    <p class="text-sm text-surface-400 mt-1">Photo of parts, confirm quantity</p>
+                </div>
+                <div class="connector connector-blue"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Navigate to Workshop — توجه للورشة</h4>
+                    <p class="text-sm text-surface-400 mt-1">Map + directions, call workshop</p>
+                </div>
+                <div class="connector connector-blue"></div>
+                <div class="arrow-tip" style="border-top-color:rgba(59,130,246,0.6)"></div>
+                <div class="glass rounded-2xl p-5 card-hover glow-blue border-blue-500/10">
+                    <h4 class="text-white font-semibold">Confirm Delivery — تأكيد التسليم</h4>
+                    <p class="text-sm text-surface-400 mt-1">Delivery photo, mark complete</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-xl p-4 text-center border-emerald-500/20">
+                    <p class="text-emerald-400 font-bold text-sm">25 QAR released to wallet</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 8: SHOP MODE ====== -->
+        <section class="mb-20 page-break" id="shop-mode">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-brand-500/10 text-brand-400 text-sm font-bold flex items-center justify-center border border-brand-500/20">08</span>
+                <h2 class="text-xl font-bold text-white">Pro: Shop Mode</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">وضع المتجر</span>
+            </div>
+
+            <div class="space-y-1">
+                <div class="glass-light rounded-2xl p-5 card-hover">
+                    <h4 class="text-white font-semibold">Dashboard — لوحة المتجر</h4>
+                    <p class="text-sm text-surface-400 mt-1">Today's sales, new orders count, total inventory</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <div class="text-center mb-2"><span
+                                class="tag bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px]">Inventory</span>
+                        </div>
+                        <div class="glass-light rounded-xl p-4 card-hover">
+                            <h4 class="text-white font-semibold text-sm">Manage Inventory</h4>
+                            <p class="text-xs text-surface-400 mt-1">Add/edit parts, photos, pricing, car compatibility,
+                                stock toggle</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-center mb-2"><span
+                                class="tag bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px]">Orders</span>
+                        </div>
+                        <div class="glass-light rounded-xl p-4 card-hover">
+                            <h4 class="text-white font-semibold text-sm">Incoming Orders</h4>
+                            <p class="text-xs text-surface-400 mt-1">Accept/reject, items list, total amount</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-xl p-4 text-center border-amber-500/20">
+                    <p class="text-amber-400 font-semibold text-sm">Preparing — جاري التجهيز</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-xl p-4 text-center">
+                    <p class="text-surface-300 text-sm">Ready for pickup — Driver collects</p>
+                </div>
+                <div class="connector"></div>
+                <div class="arrow-tip"></div>
+                <div class="glass-light rounded-xl p-4 text-center border-emerald-500/20">
+                    <p class="text-emerald-400 font-bold text-sm">Payment released</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SECTION 9: ADMIN ====== -->
+        <section class="mb-20 page-break" id="admin">
+            <div class="flex items-center gap-3 mb-8">
+                <span
+                    class="section-num w-8 h-8 rounded-lg bg-white/10 text-surface-300 text-sm font-bold flex items-center justify-center border border-white/10">09</span>
+                <h2 class="text-xl font-bold text-white">Admin Dashboard</h2>
+                <span class="tag bg-white/5 text-surface-400 text-[10px]">لوحة الإدارة</span>
+            </div>
+
+            <div class="glass-light rounded-2xl p-5 card-hover mb-4">
+                <h4 class="text-white font-semibold">Analytics — لوحة القيادة</h4>
+                <p class="text-sm text-surface-400 mt-1">Revenue, order volume, new users, open disputes, trend charts
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass-light rounded-xl p-4 card-hover">
+                    <p class="text-blue-400 font-semibold text-sm">Users — المستخدمين</p>
+                    <p class="text-xs text-surface-400 mt-1">Search, verify, suspend, delete</p>
+                </div>
+                <div class="glass-light rounded-xl p-4 card-hover">
+                    <p class="text-purple-400 font-semibold text-sm">Orders — الطلبات</p>
+                    <p class="text-xs text-surface-400 mt-1">Disputes, manual escrow, refunds</p>
+                </div>
+                <div class="glass-light rounded-xl p-4 card-hover">
+                    <p class="text-amber-400 font-semibold text-sm">Payouts — المدفوعات</p>
+                    <p class="text-xs text-surface-400 mt-1">Approve/reject withdrawal requests</p>
+                </div>
+                <div class="glass-light rounded-xl p-4 card-hover">
+                    <p class="text-surface-300 font-semibold text-sm">Settings — الإعدادات</p>
+                    <p class="text-xs text-surface-400 mt-1">Commission %, zones, delivery fees, feature flags</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="text-center py-12 border-t border-white/5">
+            <p class="text-surface-400/40 text-xs font-mono">OnlyCars Flow Architecture &middot; v2.0 &middot; 43
+                screens &middot; 3 apps &middot; Qatar</p>
+        </footer>
+
+    </main>
+</body>
+
+</html>
