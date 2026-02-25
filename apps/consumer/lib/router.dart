@@ -15,6 +15,7 @@ import 'screens/orders/order_tracking_screen.dart';
 import 'screens/orders/rate_workshop_screen.dart';
 import 'screens/marketplace/marketplace_screen.dart';
 import 'screens/marketplace/cart_screen.dart';
+import 'screens/marketplace/checkout_screen.dart';
 import 'screens/marketplace/part_detail_screen.dart';
 import 'screens/marketplace/shop_profile_screen.dart';
 import 'screens/orders/workshop_bill_screen.dart';
@@ -42,6 +43,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/notifications', builder: (_, _) => const NotificationsScreen()),
       GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+      GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
       GoRoute(path: '/vehicle/add', builder: (_, _) => const VehicleAddScreen()),
       GoRoute(
         path: '/order/:id',
