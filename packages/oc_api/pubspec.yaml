@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   supabase_flutter: ^2.8.0
+  firebase_auth: ^5.5.0
   oc_models:
     path: ../oc_models
 
