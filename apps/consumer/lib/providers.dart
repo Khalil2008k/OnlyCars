@@ -15,7 +15,7 @@ final diagnosisServiceProvider = Provider((_) => DiagnosisService());
 // ===== AUTH STATE =====
 final authStateProvider = StreamProvider<bool>((ref) {
   final auth = ref.read(authServiceProvider);
-  return auth.onAuthStateChange.map((state) => state.session != null);
+  return auth.onAuthStateChange.map((user) => user != null);
 });
 
 // ===== USER PROFILE =====
