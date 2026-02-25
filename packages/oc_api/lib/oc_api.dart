@@ -3,7 +3,7 @@
 /// Provides all services for communicating with the Supabase backend.
 library oc_api;
 
-export 'package:supabase_flutter/supabase_flutter.dart' show PostgresChangeFilter, PostgresChangeFilterType, PostgresChangeEvent, CountOption;
+export 'package:supabase_flutter/supabase_flutter.dart' show PostgresChangeFilter, PostgresChangeFilterType, PostgresChangeEvent, CountOption, FileOptions, FileObject;
 
 export 'src/supabase_client.dart';
 export 'src/auth_service.dart';
