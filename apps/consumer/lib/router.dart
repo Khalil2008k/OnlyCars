@@ -23,6 +23,7 @@ import 'screens/vehicles/vehicle_add_screen.dart';
 import 'screens/chat/chat_detail_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
+import 'screens/diagnosis/diagnosis_report_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -64,6 +65,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/bill/:id',
         builder: (_, state) => WorkshopBillScreen(billId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/diagnosis/:id',
+        builder: (_, state) => DiagnosisReportScreen(reportId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/chat/:id',
