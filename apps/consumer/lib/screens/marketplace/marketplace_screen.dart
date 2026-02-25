@@ -50,14 +50,14 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
                       return OcChip(
                         label: 'الكل',
                         selected: _selectedCategory == null,
-                        onTap: () => setState(() => _selectedCategory = null),
+                        onSelected: (_) => setState(() => _selectedCategory = null),
                       );
                     }
                     final cat = cats[i - 1];
                     return OcChip(
                       label: cat.nameAr,
                       selected: _selectedCategory == cat.id,
-                      onTap: () => setState(() => _selectedCategory = cat.id),
+                      onSelected: (_) => setState(() => _selectedCategory = cat.id),
                     );
                   },
                 ),
