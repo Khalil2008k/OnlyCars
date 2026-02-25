@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:consumer/screens/auth/login_screen.dart';
-import 'package:consumer/screens/marketplace/marketplace_screen.dart';
 import 'package:consumer/screens/orders/rate_workshop_screen.dart';
 
 void main() {
