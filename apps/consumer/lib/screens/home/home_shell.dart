@@ -46,7 +46,7 @@ class HomeShell extends StatelessWidget {
         activeIcon: Icons.chat_bubble_rounded,
         label: 'المحادثات',
       ),
-      path: '/profile',
+      path: '/chat',
     ),
   ];
 

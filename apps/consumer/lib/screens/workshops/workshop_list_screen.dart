@@ -1,56 +1,18 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
 import '../../providers.dart';
 
-/// Workshop Map Screen — split view: top real map, bottom workshop list.
+/// Workshop Map Screen — split: top real OSM map tiles, bottom workshop list.
 class WorkshopListScreen extends ConsumerWidget {
   const WorkshopListScreen({super.key});
 
-  // Doha, Qatar — center lat/lng
+  // Doha, Qatar center
   static const _lat = 25.2854;
   static const _lng = 51.5310;
-  static const _zoom = 13;
-
-  // OpenStreetMap static tile URL (free, no API key)
-  static String get _mapTileUrl =>
-      'https://tile.openstreetmap.org/$_zoom/${_lonToTileX(_lng, _zoom)}/${_latToTileY(_lat, _zoom)}.png';
-
-  // Multiple tiles for a larger map area
-  static List<String> get _mapTileUrls {
-    final cx = _lonToTileX(_lng, _zoom);
-    final cy = _latToTileY(_lat, _zoom);
-    final tiles = <String>[];
-    for (int dy = -1; dy <= 1; dy++) {
-      for (int dx = -1; dx <= 1; dx++) {
-        tiles.add('https://tile.openstreetmap.org/$_zoom/${cx + dx}/${cy + dy}.png');
-      }
-    }
-    return tiles;
-  }
-
-  static int _lonToTileX(double lon, int zoom) =>
-      ((lon + 180) / 360 * (1 << zoom)).floor();
-
-  static int _latToTileY(double lat, int zoom) {
-    final latRad = lat * 3.14159265359 / 180;
-    return ((1 - (latRad.abs() < 1.5 ? _log(_tan(latRad) + 1 / _cos(latRad)) : 0) / 3.14159265359) / 2 * (1 << zoom)).floor();
-  }
-
-  static double _tan(double x) => x + x * x * x / 3;
-  static double _cos(double x) => 1 - x * x / 2 + x * x * x * x / 24;
-  static double _log(double x) {
-    if (x <= 0) return 0;
-    double result = 0;
-    double y = (x - 1) / (x + 1);
-    double term = y;
-    for (int i = 1; i <= 20; i += 2) {
-      result += term / i;
-      term *= y * y;
-    }
-    return 2 * result;
-  }
+  static const _zoom = 14;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,35 +24,13 @@ class WorkshopListScreen extends ConsumerWidget {
         bottom: false,
         child: Column(
           children: [
-            // ── Top: Real Map Area (≈45%) ────────────
+            // ── Top: Real Map Tiles (≈45%) ───────────
             Expanded(
               flex: 45,
               child: Stack(
                 children: [
-                  // Real OpenStreetMap tiles
-                  SizedBox.expand(
-                    child: Image.network(
-                      // Use a static map image from OpenStreetMap
-                      'https://staticmap.openstreetmap.de/staticmap.php?center=$_lat,$_lng&zoom=$_zoom&size=600x400&maptype=mapnik'
-                      '&markers=$_lat,$_lng,lightblue'
-                      '&markers=25.292,51.520,red'
-                      '&markers=25.278,51.540,red'
-                      '&markers=25.270,51.518,red'
-                      '&markers=25.299,51.535,red'
-                      '&markers=25.285,51.505,red',
-                      fit: BoxFit.cover,
-                      loadingBuilder: (_, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: const Color(0xFFE8EEF5),
-                          child: const Center(
-                            child: CircularProgressIndicator(color: OcColors.accent),
-                          ),
-                        );
-                      },
-                      errorBuilder: (_, __, ___) => _FallbackMap(),
-                    ),
-                  ),
+                  // OSM tile grid
+                  const _OsmTileMap(lat: _lat, lng: _lng, zoom: _zoom),
                   // Search overlay
                   Positioned(
                     top: OcSpacing.md,
@@ -126,7 +66,7 @@ class WorkshopListScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  // My location button
+                  // My location
                   Positioned(
                     bottom: OcSpacing.lg,
                     right: OcSpacing.page,
@@ -138,6 +78,19 @@ class WorkshopListScreen extends ConsumerWidget {
                         boxShadow: OcShadows.elevated,
                       ),
                       child: const Icon(Icons.my_location_rounded, color: OcColors.accent, size: 22),
+                    ),
+                  ),
+                  // Center pin
+                  Center(
+                    child: Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: OcColors.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: OcShadows.elevated,
+                      ),
+                      child: const Icon(Icons.my_location_rounded, color: OcColors.onAccent, size: 20),
                     ),
                   ),
                 ],
@@ -262,25 +215,63 @@ class WorkshopListScreen extends ConsumerWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-// FALLBACK MAP (when network tiles fail)
+// OSM TILE MAP — Renders real OpenStreetMap tiles in a grid
 // ═══════════════════════════════════════════════════════
 
-class _FallbackMap extends StatelessWidget {
+class _OsmTileMap extends StatelessWidget {
+  final double lat;
+  final double lng;
+  final int zoom;
+
+  const _OsmTileMap({required this.lat, required this.lng, required this.zoom});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFE8EEF5),
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.map_outlined, size: 48, color: OcColors.textMuted),
-            SizedBox(height: 8),
-            Text('تحميل الخريطة...', style: TextStyle(color: OcColors.textMuted)),
-          ],
+    // Calculate center tile
+    final cx = _lonToTileX(lng, zoom);
+    final cy = _latToTileY(lat, zoom);
+
+    // Build a 5x4 grid of tiles centered on the location
+    return ClipRect(
+      child: OverflowBox(
+        maxWidth: 5 * 256.0,
+        maxHeight: 4 * 256.0,
+        child: SizedBox(
+          width: 5 * 256.0,
+          height: 4 * 256.0,
+          child: Stack(
+            children: [
+              for (int dx = -2; dx <= 2; dx++)
+                for (int dy = -1; dy <= 2; dy++)
+                  Positioned(
+                    left: (dx + 2) * 256.0,
+                    top: (dy + 1) * 256.0,
+                    width: 256,
+                    height: 256,
+                    child: Image.network(
+                      'https://tile.openstreetmap.org/$zoom/${cx + dx}/${cy + dy}.png',
+                      fit: BoxFit.cover,
+                      headers: const {'User-Agent': 'OnlyCars/1.0'},
+                      loadingBuilder: (_, child, progress) {
+                        if (progress == null) return child;
+                        return Container(color: const Color(0xFFE8EEF5));
+                      },
+                      errorBuilder: (_, __, ___) => Container(color: const Color(0xFFE8EEF5)),
+                    ),
+                  ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  static int _lonToTileX(double lon, int zoom) =>
+      ((lon + 180) / 360 * (1 << zoom)).floor();
+
+  static int _latToTileY(double lat, int zoom) {
+    final latRad = lat * pi / 180;
+    return ((1 - log(tan(latRad) + 1 / cos(latRad)) / pi) / 2 * (1 << zoom)).floor();
   }
 }
 

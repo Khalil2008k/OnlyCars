@@ -60,25 +60,11 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Spacer(flex: 2),
 
-                // Logo
+                // Real OnlyCars logo
                 Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: OcColors.primary,
-                      borderRadius: BorderRadius.circular(OcRadius.lg),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'OC',
-                        style: TextStyle(
-                          color: OcColors.textOnPrimary,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
+                  child: OcLogo(
+                    size: 120,
+                    assetPath: OcLogoAssets.vertical,
                   ),
                 ),
 

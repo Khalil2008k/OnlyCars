@@ -19,6 +19,7 @@ import 'screens/marketplace/shop_profile_screen.dart';
 import 'screens/orders/workshop_bill_screen.dart';
 import 'screens/vehicles/vehicle_add_screen.dart';
 import 'screens/chat/chat_detail_screen.dart';
+import 'screens/chat/chat_list_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/diagnosis/diagnosis_report_screen.dart';
@@ -95,6 +96,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/workshops', builder: (_, _) => const WorkshopListScreen()),
           GoRoute(path: '/marketplace', builder: (_, _) => const MarketplaceScreen()),
           GoRoute(path: '/orders', builder: (_, _) => const OrdersScreen()),
+          GoRoute(path: '/chat', builder: (_, _) => const ChatListScreen()),
           GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ],
       ),

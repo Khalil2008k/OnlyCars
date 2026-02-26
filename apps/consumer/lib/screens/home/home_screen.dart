@@ -238,35 +238,49 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Brand logo
-        const OcLogo(size: 81, assetPath: OcLogoAssets.horizontal),
-        const Spacer(),
-        OcBadge(
-          count: 0,
-          child: IconButton(
-            onPressed: () => context.push('/cart'),
-            icon: const Icon(Icons.shopping_cart_outlined, color: OcColors.textPrimary),
-          ),
-        ),
-        OcBadge(
-          count: unreadCount,
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined, color: OcColors.textPrimary),
-          ),
-        ),
-        GestureDetector(
-          onTap: () => context.push('/profile'),
-          child: Container(
-            width: 34, height: 34,
-            decoration: BoxDecoration(
-              color: OcColors.surfaceCard,
-              shape: BoxShape.circle,
-              border: Border.all(color: OcColors.border),
+        Row(
+          children: [
+            // Brand logo
+            const OcLogo(size: 81, assetPath: OcLogoAssets.horizontal),
+            const Spacer(),
+            OcBadge(
+              count: 0,
+              child: IconButton(
+                onPressed: () => context.push('/cart'),
+                icon: const Icon(Icons.shopping_cart_outlined, color: OcColors.textPrimary),
+              ),
             ),
-            child: const Icon(Icons.person_outlined, size: 20, color: OcColors.textSecondary),
+            OcBadge(
+              count: unreadCount,
+              child: IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.notifications_outlined, color: OcColors.textPrimary),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => context.push('/profile'),
+              child: Container(
+                width: 34, height: 34,
+                decoration: BoxDecoration(
+                  color: OcColors.surfaceCard,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: OcColors.border),
+                ),
+                child: const Icon(Icons.person_outlined, size: 20, color: OcColors.textSecondary),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'مرحباً 👋 $name',
+          style: const TextStyle(
+            fontSize: 15,
+            color: OcColors.textSecondary,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -298,11 +312,10 @@ class _MiniServiceCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(OcRadius.card),
-          border: Border.all(color: color.withValues(alpha: 0.15)),
+          color: OcColors.navBar,
+          borderRadius: BorderRadius.circular(OcRadius.pill),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -310,15 +323,15 @@ class _MiniServiceCard extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color, size: 26),
+                Icon(icon, color: Colors.white, size: 16),
                 if (overlay != null)
                   Positioned(
-                    right: -6,
-                    bottom: -4,
+                    right: -4,
+                    bottom: -3,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(1),
                       decoration: BoxDecoration(
-                        color: color,
+                        color: OcColors.accent,
                         shape: BoxShape.circle,
                       ),
                       child: overlay!,
@@ -326,10 +339,10 @@ class _MiniServiceCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: OcColors.accent, fontSize: 10, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
           ],
