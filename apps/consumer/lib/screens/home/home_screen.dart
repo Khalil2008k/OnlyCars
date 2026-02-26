@@ -11,7 +11,6 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
     final vehiclesAsync = ref.watch(vehiclesProvider);
-    final ordersAsync = ref.watch(activeOrderCountProvider);
     final unreadAsync = ref.watch(unreadNotifCountProvider);
 
     return Scaffold(
@@ -23,7 +22,6 @@ class HomeScreen extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(userProfileProvider);
             ref.invalidate(vehiclesProvider);
-            ref.invalidate(activeOrderCountProvider);
             ref.invalidate(unreadNotifCountProvider);
           },
           child: CustomScrollView(
@@ -67,7 +65,7 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.xl)),
+              const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.lg)),
 
               // ── Search Bar ──────────────────────────
               SliverToBoxAdapter(
@@ -80,13 +78,42 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.section)),
+              const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.lg)),
 
-              // ── Quick Actions ───────────────────────
+              // ── 3 Compact Service Buttons ───────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
-                  child: _QuickActions(activeOrders: ordersAsync.valueOrNull ?? 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _MiniServiceCard(
+                          icon: Icons.build_circle_rounded,
+                          label: 'الورش',
+                          color: const Color(0xFF1976D2),
+                          onTap: () => context.push('/workshops'),
+                        ),
+                      ),
+                      const SizedBox(width: OcSpacing.sm),
+                      Expanded(
+                        child: _MiniServiceCard(
+                          icon: Icons.shopping_bag_rounded,
+                          label: 'قطع الغيار',
+                          color: const Color(0xFFE65100),
+                          onTap: () => context.push('/marketplace'),
+                        ),
+                      ),
+                      const SizedBox(width: OcSpacing.sm),
+                      Expanded(
+                        child: _MiniServiceCard(
+                          icon: Icons.health_and_safety_rounded,
+                          label: 'التشخيص',
+                          color: const Color(0xFF2E7D32),
+                          onTap: () {},
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.section)),
@@ -108,7 +135,7 @@ class HomeScreen extends ConsumerWidget {
                           child: _EmptyVehicleCard(),
                         )
                       : SizedBox(
-                          height: 130,
+                          height: 110,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
@@ -118,7 +145,7 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         ),
                   loading: () => const SizedBox(
-                    height: 130,
+                    height: 110,
                     child: Center(child: CircularProgressIndicator(color: OcColors.accent)),
                   ),
                   error: (e, _) => OcErrorState(
@@ -129,44 +156,67 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.section)),
 
-              // ── Explore Section ────────────────────
+              // ── Car Parts For Sale ──────────────────
               SliverToBoxAdapter(
-                child: OcSectionHeader(title: 'خدمات OnlyCars', actionLabel: 'الكل'),
+                child: OcSectionHeader(
+                  title: 'قطع غيار مميزة',
+                  actionLabel: 'عرض الكل',
+                  onAction: () => context.push('/marketplace'),
+                ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.md)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
-                  child: Column(
-                    children: [
-                      _ServiceCard(
-                        icon: Icons.build_circle_rounded,
-                        color: OcColors.accent,
-                        title: 'ابحث عن ورشة',
-                        subtitle: 'اعثر على أفضل الورش القريبة منك',
-                        onTap: () => context.push('/workshops'),
-                      ),
-                      const SizedBox(height: OcSpacing.cardGap),
-                      _ServiceCard(
-                        icon: Icons.shopping_bag_rounded,
-                        color: OcColors.accent,
-                        title: 'سوق قطع الغيار',
-                        subtitle: 'تصفح آلاف القطع بأفضل الأسعار',
-                        onTap: () => context.push('/marketplace'),
-                      ),
-                      const SizedBox(height: OcSpacing.cardGap),
-                      _ServiceCard(
-                        icon: Icons.health_and_safety_rounded,
-                        color: OcColors.accent,
-                        title: 'سجل صحة السيارة',
-                        subtitle: 'تابع حالة سيارتك وصيانتها',
-                        onTap: () {},
-                      ),
-                      // Bottom padding for floating nav
-                      const SizedBox(height: OcSizes.navBarHeight + OcSizes.navBarBottomMargin + OcSpacing.lg),
-                    ],
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.58,
                   ),
+                  delegate: SliverChildListDelegate([
+                    OcProductCard(
+                      name: 'فلتر زيت تويوتا كامري',
+                      price: '٤٥ ر.ق',
+                      category: 'فلاتر',
+                      rating: 4.8,
+                      discount: 15,
+                      stockLeft: 12,
+                      onTap: () => context.push('/marketplace'),
+                    ),
+                    OcProductCard(
+                      name: 'بطارية فارتا ٧٠ أمبير',
+                      price: '٢٨٠ ر.ق',
+                      category: 'بطاريات',
+                      rating: 4.9,
+                      discount: 10,
+                      stockLeft: 5,
+                      onTap: () => context.push('/marketplace'),
+                    ),
+                    OcProductCard(
+                      name: 'تيل فرامل نيسان سنترا',
+                      price: '١٢٠ ر.ق',
+                      category: 'فرامل',
+                      rating: 4.5,
+                      stockLeft: 8,
+                      onTap: () => context.push('/marketplace'),
+                    ),
+                    OcProductCard(
+                      name: 'زيت محرك موبيل 5W-30',
+                      price: '٨٥ ر.ق',
+                      category: 'زيوت',
+                      rating: 5.0,
+                      discount: 20,
+                      stockLeft: 25,
+                      onTap: () => context.push('/marketplace'),
+                    ),
+                  ]),
                 ),
+              ),
+
+              // Bottom padding for floating nav
+              SliverToBoxAdapter(
+                child: SizedBox(height: OcSizes.navBarHeight + OcSizes.navBarBottomMargin + OcSpacing.xl),
               ),
             ],
           ),
@@ -177,7 +227,7 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-// HEADER — Logo + User + Cart/Notifications
+// HEADER
 // ═══════════════════════════════════════════════════════
 
 class _Header extends StatelessWidget {
@@ -209,22 +259,16 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'مرحباً 👋',
-                style: TextStyle(color: OcColors.textMuted, fontSize: 12),
-              ),
+              Text('مرحباً 👋', style: TextStyle(color: OcColors.textMuted, fontSize: 12)),
               Text(
                 name,
                 style: const TextStyle(
-                  color: OcColors.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+                  color: OcColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        // Cart
         OcBadge(
           count: 0,
           child: IconButton(
@@ -232,7 +276,6 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.shopping_cart_outlined, color: OcColors.textPrimary),
           ),
         ),
-        // Notifications
         OcBadge(
           count: unreadCount,
           child: IconButton(
@@ -240,10 +283,17 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.notifications_outlined, color: OcColors.textPrimary),
           ),
         ),
-        // Menu
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.menu_rounded, color: OcColors.textPrimary),
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: OcColors.surfaceCard,
+              shape: BoxShape.circle,
+              border: Border.all(color: OcColors.border),
+            ),
+            child: const Icon(Icons.person_outlined, size: 20, color: OcColors.textSecondary),
+          ),
         ),
       ],
     );
@@ -251,62 +301,52 @@ class _Header extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-// QUICK ACTIONS — 4 icon buttons in a row
+// MINI SERVICE CARD — Compact 3-up row
 // ═══════════════════════════════════════════════════════
 
-class _QuickActions extends StatelessWidget {
-  final int activeOrders;
-  const _QuickActions({required this.activeOrders});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _QuickAction(icon: Icons.build_circle_rounded, label: 'الورش', color: OcColors.accent),
-        _QuickAction(icon: Icons.shopping_bag_rounded, label: 'القطع', color: OcColors.accent),
-        _QuickAction(icon: Icons.receipt_long_rounded, label: 'الطلبات', badge: activeOrders, color: OcColors.accent),
-        _QuickAction(icon: Icons.chat_rounded, label: 'المحادثات', color: OcColors.accent),
-      ],
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
+class _MiniServiceCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final int badge;
-  const _QuickAction({required this.icon, required this.label, required this.color, this.badge = 0});
+  final VoidCallback? onTap;
+
+  const _MiniServiceCard({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        OcBadge(
-          count: badge,
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(OcRadius.lg),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(OcRadius.card),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
-            child: Icon(icon, color: color, size: 24),
-          ),
+          ],
         ),
-        const SizedBox(height: OcSpacing.sm),
-        Text(
-          label,
-          style: const TextStyle(color: OcColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500),
-        ),
-      ],
+      ),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════
-// VEHICLE CARD — Horizontal scroll
+// VEHICLE CARD
 // ═══════════════════════════════════════════════════════
 
 class _VehicleCard extends StatelessWidget {
@@ -316,8 +356,8 @@ class _VehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
-      padding: const EdgeInsets.all(OcSpacing.lg),
+      width: 180,
+      padding: const EdgeInsets.all(OcSpacing.md),
       decoration: BoxDecoration(
         color: OcColors.surfaceCard,
         borderRadius: BorderRadius.circular(OcRadius.card),
@@ -329,33 +369,27 @@ class _VehicleCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: OcColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(OcRadius.sm),
                 ),
-                child: const Icon(Icons.directions_car_rounded, color: OcColors.accent, size: 24),
+                child: const Icon(Icons.directions_car_rounded, color: OcColors.accent, size: 20),
               ),
               const SizedBox(width: OcSpacing.sm),
               Expanded(
                 child: Text(
                   '${vehicle.make} ${vehicle.model}',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: OcColors.textPrimary),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: OcColors.textPrimary),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: OcSpacing.sm),
-          Text(
-            '${vehicle.year}',
-            style: const TextStyle(color: OcColors.textSecondary, fontSize: 12),
-          ),
+          const SizedBox(height: 6),
+          Text('${vehicle.year}', style: const TextStyle(color: OcColors.textSecondary, fontSize: 11)),
           if (vehicle.plateNumber != null)
-            Text(
-              vehicle.plateNumber,
-              style: const TextStyle(color: OcColors.accent, fontWeight: FontWeight.w600, fontSize: 12),
-            ),
+            Text(vehicle.plateNumber, style: const TextStyle(color: OcColors.accent, fontWeight: FontWeight.w600, fontSize: 11)),
         ],
       ),
     );
@@ -366,78 +400,20 @@ class _EmptyVehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 130,
-      padding: const EdgeInsets.all(OcSpacing.xl),
+      height: 110,
+      padding: const EdgeInsets.all(OcSpacing.lg),
       decoration: BoxDecoration(
         color: OcColors.surfaceCard,
         borderRadius: BorderRadius.circular(OcRadius.card),
-        border: Border.all(color: OcColors.border, style: BorderStyle.solid),
+        border: Border.all(color: OcColors.border),
       ),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.add_circle_outline_rounded, color: OcColors.textMuted, size: 32),
-            const SizedBox(height: OcSpacing.sm),
-            Text(
-              'أضف سيارتك الأولى',
-              style: TextStyle(color: OcColors.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// SERVICE CARD — Explore section items
-// ═══════════════════════════════════════════════════════
-
-class _ServiceCard extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-  const _ServiceCard({
-    required this.icon, required this.color,
-    required this.title, required this.subtitle,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(OcSpacing.lg),
-        decoration: BoxDecoration(
-          color: OcColors.surfaceCard,
-          borderRadius: BorderRadius.circular(OcRadius.card),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(OcRadius.md),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: OcSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: OcColors.textPrimary)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: OcColors.textSecondary)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_left_rounded, color: OcColors.textMuted),
+            Icon(Icons.add_circle_outline_rounded, color: OcColors.textMuted, size: 28),
+            const SizedBox(height: 6),
+            Text('أضف سيارتك الأولى', style: TextStyle(color: OcColors.textSecondary, fontSize: 13)),
           ],
         ),
       ),

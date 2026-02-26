@@ -460,10 +460,10 @@ class OcProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image container
-          AspectRatio(
-            aspectRatio: 0.9,
+          // Image container — expands to fill available space
+          Expanded(
             child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: OcColors.surfaceCard,
                 borderRadius: BorderRadius.circular(OcRadius.card),
@@ -473,11 +473,9 @@ class OcProductCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Discount badge
                   if (discount != null && discount! > 0)
                     Positioned(
-                      top: 8,
-                      left: 8,
+                      top: 8, left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
@@ -486,11 +484,7 @@ class OcProductCard extends StatelessWidget {
                         ),
                         child: Text(
                           '-$discount%',
-                          style: const TextStyle(
-                            color: OcColors.onAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: const TextStyle(color: OcColors.onAccent, fontSize: 10, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -510,61 +504,43 @@ class OcProductCard extends StatelessWidget {
               ),
               child: Text(
                 category!,
-                style: const TextStyle(
-                  color: OcColors.onAccent,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: const TextStyle(color: OcColors.onAccent, fontSize: 10, fontWeight: FontWeight.w600),
               ),
             ),
 
           // Stock count
-          if (stockLeft != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              '$stockLeft متبقي',
-              style: const TextStyle(color: OcColors.textMuted, fontSize: 11),
+          if (stockLeft != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text('$stockLeft متبقي', style: const TextStyle(color: OcColors.textMuted, fontSize: 11)),
             ),
-          ],
 
           // Product name
-          const SizedBox(height: 2),
-          Text(
-            name,
-            style: const TextStyle(
-              color: OcColors.textPrimary,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              name,
+              style: const TextStyle(color: OcColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600, height: 1.3),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
 
-          const SizedBox(height: 4),
-
           // Price + Rating row
-          Row(
-            children: [
-              if (rating != null) ...[
-                Icon(Icons.star_rounded, size: 14, color: OcColors.starAmber),
-                const SizedBox(width: 2),
-                Text(
-                  rating!.toStringAsFixed(1),
-                  style: const TextStyle(color: OcColors.textSecondary, fontSize: 12),
-                ),
-                const Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              children: [
+                if (rating != null) ...[
+                  Icon(Icons.star_rounded, size: 14, color: OcColors.starAmber),
+                  const SizedBox(width: 2),
+                  Text(rating!.toStringAsFixed(1), style: const TextStyle(color: OcColors.textSecondary, fontSize: 12)),
+                  const Spacer(),
+                ],
+                Text(price, style: const TextStyle(color: OcColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
+                if (rating == null) const Spacer(),
               ],
-              Text(
-                price,
-                style: const TextStyle(
-                  color: OcColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (rating == null) const Spacer(),
-            ],
+            ),
           ),
         ],
       ),

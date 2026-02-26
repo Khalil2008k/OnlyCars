@@ -18,9 +18,9 @@ class HomeShell extends StatelessWidget {
     ),
     (
       item: OcNavItem(
-        icon: Icons.build_circle_outlined,
-        activeIcon: Icons.build_circle_rounded,
-        label: 'الورش',
+        icon: Icons.map_outlined,
+        activeIcon: Icons.map_rounded,
+        label: 'الخريطة',
       ),
       path: '/workshops',
     ),
@@ -28,23 +28,23 @@ class HomeShell extends StatelessWidget {
       item: OcNavItem(
         icon: Icons.shopping_bag_outlined,
         activeIcon: Icons.shopping_bag_rounded,
-        label: 'سوق القطع',
+        label: 'القطع',
       ),
       path: '/marketplace',
     ),
     (
       item: OcNavItem(
-        icon: Icons.favorite_border_rounded,
-        activeIcon: Icons.favorite_rounded,
-        label: 'المفضلة',
+        icon: Icons.receipt_long_outlined,
+        activeIcon: Icons.receipt_long_rounded,
+        label: 'الطلبات',
       ),
       path: '/orders',
     ),
     (
       item: OcNavItem(
-        icon: Icons.person_outline_rounded,
-        activeIcon: Icons.person_rounded,
-        label: 'حسابي',
+        icon: Icons.chat_bubble_outline_rounded,
+        activeIcon: Icons.chat_bubble_rounded,
+        label: 'المحادثات',
       ),
       path: '/profile',
     ),
