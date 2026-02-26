@@ -80,45 +80,35 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.lg)),
 
-              // ── 3 Compact Service Buttons ───────────
+              // ── Quick Action Chips ─────────────────
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
-                  child: Center(
-                    child: FractionallySizedBox(
-                      widthFactor: 0.55,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _MiniServiceCard(
-                              icon: Icons.build_circle_rounded,
-                              label: 'الورش',
-                              color: const Color(0xFF1976D2),
-                              onTap: () => context.push('/workshops'),
-                            ),
-                          ),
-                          const SizedBox(width: OcSpacing.sm),
-                          Expanded(
-                            child: _MiniServiceCard(
-                              icon: Icons.shopping_bag_rounded,
-                              label: 'قطع الغيار',
-                              color: const Color(0xFFE65100),
-                              onTap: () => context.push('/marketplace'),
-                            ),
-                          ),
-                          const SizedBox(width: OcSpacing.sm),
-                          Expanded(
-                            child: _MiniServiceCard(
-                              icon: Icons.directions_car_rounded,
-                              label: 'التشخيص',
-                              color: const Color(0xFF2E7D32),
-                              overlay: const Icon(Icons.add_rounded, color: Colors.white, size: 10),
-                              onTap: () {},
-                            ),
-                          ),
-                        ],
+                child: SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
+                    children: [
+                      _ActionChip(
+                        icon: Icons.build_rounded,
+                        label: 'الورش',
+                        color: const Color(0xFF1976D2),
+                        onTap: () => context.push('/workshops'),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      _ActionChip(
+                        icon: Icons.shopping_bag_rounded,
+                        label: 'قطع الغيار',
+                        color: const Color(0xFFE65100),
+                        onTap: () => context.push('/marketplace'),
+                      ),
+                      const SizedBox(width: 10),
+                      _ActionChip(
+                        icon: Icons.directions_car_rounded,
+                        label: 'التشخيص',
+                        color: const Color(0xFF2E7D32),
+                        onTap: () {},
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -294,21 +284,19 @@ class _Header extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-// MINI SERVICE CARD — Compact 3-up row
+// ACTION CHIP — Inline icon+text pill
 // ═══════════════════════════════════════════════════════
 
-class _MiniServiceCard extends StatelessWidget {
+class _ActionChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final Widget? overlay;
   final VoidCallback? onTap;
 
-  const _MiniServiceCard({
+  const _ActionChip({
     required this.icon,
     required this.label,
     required this.color,
-    this.overlay,
     this.onTap,
   });
 
@@ -317,38 +305,27 @@ class _MiniServiceCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: OcColors.navBar,
+          color: OcColors.surfaceCard,
           borderRadius: BorderRadius.circular(OcRadius.pill),
+          border: Border.all(color: OcColors.border),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, color: Colors.white, size: 16),
-                if (overlay != null)
-                  Positioned(
-                    right: -4,
-                    bottom: -3,
-                    child: Container(
-                      padding: const EdgeInsets.all(1),
-                      decoration: BoxDecoration(
-                        color: OcColors.accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: overlay!,
-                    ),
-                  ),
-              ],
+            Container(
+              width: 26, height: 26,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 14),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(color: OcColors.accent, fontSize: 10, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: OcColors.textPrimary),
             ),
           ],
         ),
