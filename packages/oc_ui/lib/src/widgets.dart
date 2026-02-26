@@ -328,12 +328,17 @@ class OcHeroBanner extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: OcColors.surfaceCard,
-                      image: item.imageUrl != null
+                      image: item.assetPath != null
                           ? DecorationImage(
-                              image: NetworkImage(item.imageUrl!),
+                              image: AssetImage(item.assetPath!),
                               fit: BoxFit.cover,
                             )
-                          : null,
+                          : item.imageUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(item.imageUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                     ),
                   ),
                   // Gradient overlay
@@ -415,6 +420,7 @@ class OcBannerItem {
   final String title;
   final String? subtitle;
   final String? imageUrl;
+  final String? assetPath;
   final String? buttonLabel;
   final VoidCallback? onTap;
 
@@ -422,6 +428,7 @@ class OcBannerItem {
     required this.title,
     this.subtitle,
     this.imageUrl,
+    this.assetPath,
     this.buttonLabel,
     this.onTap,
   });
@@ -435,6 +442,7 @@ class OcProductCard extends StatelessWidget {
   final String name;
   final String price;
   final String? imageUrl;
+  final String? assetPath;
   final String? category;
   final double? rating;
   final int? discount;
@@ -446,6 +454,7 @@ class OcProductCard extends StatelessWidget {
     required this.name,
     required this.price,
     this.imageUrl,
+    this.assetPath,
     this.category,
     this.rating,
     this.discount,
@@ -467,9 +476,11 @@ class OcProductCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: OcColors.surfaceCard,
                 borderRadius: BorderRadius.circular(OcRadius.card),
-                image: imageUrl != null
-                    ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
-                    : null,
+                image: assetPath != null
+                    ? DecorationImage(image: AssetImage(assetPath!), fit: BoxFit.cover)
+                    : imageUrl != null
+                        ? DecorationImage(image: NetworkImage(imageUrl!), fit: BoxFit.cover)
+                        : null,
               ),
               child: Stack(
                 children: [

@@ -51,16 +51,19 @@ class HomeScreen extends ConsumerWidget {
                       title: 'خصم 50% على تغيير الزيت',
                       subtitle: 'زيت موبيل 5W-30 أصلي + فلتر مجاناً — لفترة محدودة',
                       buttonLabel: 'احجز الآن',
+                      assetPath: 'assets/images/ad_banner_1.png',
                     ),
                     OcBannerItem(
                       title: 'كفرات ميشلان بأقل الأسعار',
                       subtitle: 'اشترِ 3 واحصل على الرابعة مجاناً — توصيل مجاني',
                       buttonLabel: 'تسوق الآن',
+                      assetPath: 'assets/images/ad_banner_1.png',
                     ),
                     OcBannerItem(
                       title: 'فحص شامل لسيارتك',
                       subtitle: 'تشخيص كمبيوتر + فحص 52 نقطة ابتداءً من 99 ر.ق',
                       buttonLabel: 'احجز فحص',
+                      assetPath: 'assets/images/ad_banner_1.png',
                     ),
                   ],
                 ),
@@ -178,6 +181,7 @@ class HomeScreen extends ConsumerWidget {
                       rating: 4.8,
                       discount: 15,
                       stockLeft: 12,
+                      assetPath: 'assets/images/part_filter.png',
                       onTap: () => context.push('/marketplace'),
                     ),
                     OcProductCard(
@@ -187,6 +191,7 @@ class HomeScreen extends ConsumerWidget {
                       rating: 4.9,
                       discount: 10,
                       stockLeft: 5,
+                      assetPath: 'assets/images/part_battery.png',
                       onTap: () => context.push('/marketplace'),
                     ),
                     OcProductCard(
@@ -195,6 +200,7 @@ class HomeScreen extends ConsumerWidget {
                       category: 'فرامل',
                       rating: 4.5,
                       stockLeft: 8,
+                      assetPath: 'assets/images/part_brakes.png',
                       onTap: () => context.push('/marketplace'),
                     ),
                     OcProductCard(
@@ -204,6 +210,7 @@ class HomeScreen extends ConsumerWidget {
                       rating: 5.0,
                       discount: 20,
                       stockLeft: 25,
+                      assetPath: 'assets/images/part_oil.png',
                       onTap: () => context.push('/marketplace'),
                     ),
                   ]),

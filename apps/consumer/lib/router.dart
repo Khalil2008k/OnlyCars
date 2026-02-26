@@ -4,6 +4,7 @@ import 'screens/auth/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/otp_screen.dart';
 import 'screens/auth/profile_setup_screen.dart';
+import 'screens/auth/terms_screen.dart';
 import 'screens/home/home_shell.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/workshops/workshop_list_screen.dart';
@@ -49,6 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => OtpScreen(phone: state.uri.queryParameters['phone'] ?? ''),
       ),
       GoRoute(path: '/profile-setup', builder: (_, _) => const ProfileSetupScreen()),
+      GoRoute(path: '/terms', builder: (_, _) => const TermsScreen()),
 
       // Detail screens (outside shell — no bottom nav)
       GoRoute(
