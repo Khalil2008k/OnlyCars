@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_client.dart';
 
 /// Authentication service — Firebase Auth for phone OTP, Supabase for DB.
+/// Uses platform-specific phone auth:
+///   Web:    signInWithPhoneNumber() → ConfirmationResult.confirm()
+///   Mobile: verifyPhoneNumber() → PhoneAuthProvider.credential()
 class AuthService {
   static final AuthService _instance = AuthService._();
   factory AuthService() => _instance;
@@ -12,49 +16,69 @@ class AuthService {
   final fb.FirebaseAuth _fbAuth = fb.FirebaseAuth.instance;
   final SupabaseClient _db = OcSupabase.client;
 
+  // Mobile: stores verification ID from codeSent callback
   String? _verificationId;
+  // Web: stores the ConfirmationResult from signInWithPhoneNumber
+  fb.ConfirmationResult? _webConfirmation;
 
-  /// Send OTP to phone number via Firebase.
+  /// Send OTP to phone number.
+  /// On web: uses signInWithPhoneNumber (handles reCAPTCHA automatically).
+  /// On mobile: uses verifyPhoneNumber with codeSent callback.
   Future<void> signInWithOtp(String phone) async {
-    final completer = Completer<void>();
+    if (kIsWeb) {
+      // Web: signInWithPhoneNumber returns ConfirmationResult
+      _webConfirmation = await _fbAuth.signInWithPhoneNumber(phone);
+    } else {
+      // Mobile: use verifyPhoneNumber
+      final completer = Completer<void>();
 
-    await _fbAuth.verifyPhoneNumber(
-      phoneNumber: phone,
-      timeout: const Duration(seconds: 60),
-      verificationCompleted: (fb.PhoneAuthCredential credential) async {
-        await _fbAuth.signInWithCredential(credential);
-        if (!completer.isCompleted) completer.complete();
-      },
-      verificationFailed: (fb.FirebaseAuthException e) {
-        if (!completer.isCompleted) {
-          completer.completeError(Exception(e.message ?? 'فشل في إرسال الرمز'));
-        }
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        _verificationId = verificationId;
-        if (!completer.isCompleted) completer.complete();
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        _verificationId = verificationId;
-      },
-    );
+      await _fbAuth.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (fb.PhoneAuthCredential credential) async {
+          await _fbAuth.signInWithCredential(credential);
+          if (!completer.isCompleted) completer.complete();
+        },
+        verificationFailed: (fb.FirebaseAuthException e) {
+          if (!completer.isCompleted) {
+            completer.completeError(Exception(e.message ?? 'فشل في إرسال الرمز'));
+          }
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          if (!completer.isCompleted) completer.complete();
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+      );
 
-    return completer.future;
+      return completer.future;
+    }
   }
 
-  /// Verify OTP code via Firebase.
+  /// Verify OTP code.
+  /// On web: uses ConfirmationResult.confirm(code).
+  /// On mobile: uses PhoneAuthProvider.credential + signInWithCredential.
   Future<fb.UserCredential> verifyOtp({
     required String phone,
     required String token,
   }) async {
-    if (_verificationId == null) {
-      throw Exception('يرجى إرسال الرمز أولاً');
+    if (kIsWeb) {
+      if (_webConfirmation == null) {
+        throw Exception('يرجى إرسال الرمز أولاً');
+      }
+      return await _webConfirmation!.confirm(token);
+    } else {
+      if (_verificationId == null) {
+        throw Exception('يرجى إرسال الرمز أولاً');
+      }
+      final credential = fb.PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: token,
+      );
+      return await _fbAuth.signInWithCredential(credential);
     }
-    final credential = fb.PhoneAuthProvider.credential(
-      verificationId: _verificationId!,
-      smsCode: token,
-    );
-    return await _fbAuth.signInWithCredential(credential);
   }
 
   /// Sign out from both Firebase and Supabase.

@@ -121,7 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final isAuth = OcSupabase.isAuthenticated;
+      final isAuth = AuthService().isAuthenticated;
       final publicRoutes = ['/login', '/otp', '/splash', '/profile-setup', '/terms', '/force-update', '/about', '/payment/success', '/payment/failed'];
       if (!isAuth && !publicRoutes.contains(state.matchedLocation)) return '/login';
       return null;

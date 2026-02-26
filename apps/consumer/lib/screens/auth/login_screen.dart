@@ -55,8 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       context.go('/otp?phone=${Uri.encodeComponent(phone)}&name=${Uri.encodeComponent(_nameController.text.trim())}');
     } catch (e) {
+      debugPrint('🔴 OTP error: $e');
       setState(() {
-        _errorMessage = 'حدث خطأ. تأكد من الرقم وحاول مرة أخرى';
+        _errorMessage = 'خطأ: $e';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);

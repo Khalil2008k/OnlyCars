@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    if (OcSupabase.isAuthenticated) {
+    if (AuthService().isAuthenticated) {
       final authService = AuthService();
       final hasProfile = await authService.hasCompletedProfile();
       if (!mounted) return;
