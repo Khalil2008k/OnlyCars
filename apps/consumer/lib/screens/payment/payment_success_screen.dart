@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
@@ -60,9 +61,9 @@ class PaymentSuccessScreen extends StatelessWidget {
                   label: 'تتبع الطلب',
                   onPressed: () {
                     if (orderId != null) {
-                      Navigator.of(context).pushReplacementNamed('/order/$orderId');
+                      context.go('/order/$orderId');
                     } else {
-                      Navigator.of(context).pushReplacementNamed('/orders');
+                      context.go('/orders');
                     }
                   },
                   icon: Icons.local_shipping_rounded,
@@ -70,7 +71,7 @@ class PaymentSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: OcSpacing.md),
               TextButton(
-                onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+                onPressed: () => context.go('/home'),
                 child: const Text('العودة للرئيسية'),
               ),
             ],

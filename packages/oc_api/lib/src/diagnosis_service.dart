@@ -12,7 +12,7 @@ class DiagnosisService {
     if (uid == null) return [];
     final data = await _client
         .from('diagnosis_reports')
-        .select('*, workshop_profiles(*), diagnosis_parts(*)')
+        .select('*, workshop_profiles(*), diagnosis_parts(*), vehicles(*)')
         .eq('consumer_id', uid)
         .order('created_at', ascending: false);
     return (data as List).map((e) => DiagnosisReport.fromJson(e)).toList();
@@ -22,7 +22,7 @@ class DiagnosisService {
   Future<DiagnosisReport?> getReportById(String id) async {
     final data = await _client
         .from('diagnosis_reports')
-        .select('*, workshop_profiles(*), diagnosis_parts(*)')
+        .select('*, workshop_profiles(*), diagnosis_parts(*), vehicles(*)')
         .eq('id', id)
         .maybeSingle();
     return data != null ? DiagnosisReport.fromJson(data) : null;
@@ -56,7 +56,7 @@ class DiagnosisService {
 
     // Insert parts if provided
     if (parts != null && parts.isNotEmpty) {
-      final partInserts = parts.map((p) => {
+      final partInserts = parts.map((p) => <String, dynamic>{
         'report_id': reportId,
         'part_name_ar': p['part_name_ar'],
         'part_number': p['part_number'],

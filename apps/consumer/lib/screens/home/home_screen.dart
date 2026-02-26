@@ -109,7 +109,7 @@ class HomeScreen extends ConsumerWidget {
                         icon: Icons.directions_car_rounded,
                         label: 'التشخيص',
                         color: const Color(0xFF2E7D32),
-                        onTap: () {},
+                        onTap: () => context.push('/profile'),
                       ),
                     ],
                   ),
@@ -122,7 +122,7 @@ class HomeScreen extends ConsumerWidget {
                 child: OcSectionHeader(
                   title: 'سياراتي',
                   actionLabel: 'إضافة',
-                  onAction: () {},
+                  onAction: () => context.push('/vehicle/add'),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.md)),
@@ -164,56 +164,47 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: OcSpacing.md)),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.58,
+              SliverToBoxAdapter(
+                child: ref.watch(partsProvider(null)).when(
+                  data: (parts) {
+                    final featured = parts.take(4).toList();
+                    if (featured.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: OcSpacing.page),
+                        child: OcEmptyState(icon: Icons.inventory_2_outlined, message: 'لا توجد قطع حالياً'),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.58,
+                        ),
+                        itemCount: featured.length,
+                        itemBuilder: (_, i) {
+                          final part = featured[i];
+                          return OcProductCard(
+                            name: part.nameAr,
+                            price: '${part.price.toStringAsFixed(0)} ر.ق',
+                            category: part.category?['name_ar'] ?? '',
+                            stockLeft: part.stockQty,
+                            imageUrl: part.imageUrls.isNotEmpty ? part.imageUrls.first : null,
+                            onTap: () => context.push('/part/${part.id}'),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(OcSpacing.xl),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                  delegate: SliverChildListDelegate([
-                    OcProductCard(
-                      name: 'فلتر زيت تويوتا كامري',
-                      price: '٤٥ ر.ق',
-                      category: 'فلاتر',
-                      rating: 4.8,
-                      discount: 15,
-                      stockLeft: 12,
-                      assetPath: 'assets/images/part_filter.png',
-                      onTap: () => context.push('/marketplace'),
-                    ),
-                    OcProductCard(
-                      name: 'بطارية فارتا ٧٠ أمبير',
-                      price: '٢٨٠ ر.ق',
-                      category: 'بطاريات',
-                      rating: 4.9,
-                      discount: 10,
-                      stockLeft: 5,
-                      assetPath: 'assets/images/part_battery.png',
-                      onTap: () => context.push('/marketplace'),
-                    ),
-                    OcProductCard(
-                      name: 'تيل فرامل نيسان سنترا',
-                      price: '١٢٠ ر.ق',
-                      category: 'فرامل',
-                      rating: 4.5,
-                      stockLeft: 8,
-                      assetPath: 'assets/images/part_brakes.png',
-                      onTap: () => context.push('/marketplace'),
-                    ),
-                    OcProductCard(
-                      name: 'زيت محرك موبيل 5W-30',
-                      price: '٨٥ ر.ق',
-                      category: 'زيوت',
-                      rating: 5.0,
-                      discount: 20,
-                      stockLeft: 25,
-                      assetPath: 'assets/images/part_oil.png',
-                      onTap: () => context.push('/marketplace'),
-                    ),
-                  ]),
+                  error: (_, __) => const SizedBox.shrink(),
                 ),
               ),
 
@@ -258,7 +249,7 @@ class _Header extends StatelessWidget {
             OcBadge(
               count: unreadCount,
               child: IconButton(
-                onPressed: () {},
+                onPressed: () => context.push('/notifications'),
                 icon: const Icon(Icons.notifications_outlined, color: OcColors.textPrimary),
               ),
             ),
@@ -395,22 +386,25 @@ class _VehicleCard extends StatelessWidget {
 class _EmptyVehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 110,
-      padding: const EdgeInsets.all(OcSpacing.lg),
-      decoration: BoxDecoration(
-        color: OcColors.surfaceCard,
-        borderRadius: BorderRadius.circular(OcRadius.card),
-        border: Border.all(color: OcColors.border),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add_circle_outline_rounded, color: OcColors.textMuted, size: 28),
-            const SizedBox(height: 6),
-            Text('أضف سيارتك الأولى', style: TextStyle(color: OcColors.textSecondary, fontSize: 13)),
-          ],
+    return GestureDetector(
+      onTap: () => context.push('/vehicle/add'),
+      child: Container(
+        height: 110,
+        padding: const EdgeInsets.all(OcSpacing.lg),
+        decoration: BoxDecoration(
+          color: OcColors.surfaceCard,
+          borderRadius: BorderRadius.circular(OcRadius.card),
+          border: Border.all(color: OcColors.border),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_circle_outline_rounded, color: OcColors.textMuted, size: 28),
+              const SizedBox(height: 6),
+              Text('أضف سيارتك الأولى', style: TextStyle(color: OcColors.textSecondary, fontSize: 13)),
+            ],
+          ),
         ),
       ),
     );

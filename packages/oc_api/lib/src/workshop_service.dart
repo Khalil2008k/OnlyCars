@@ -85,4 +85,16 @@ class WorkshopService {
       return approxKm <= radiusKm * radiusKm;
     }).toList();
   }
+
+  /// Get current user's submitted reviews with workshop names.
+  Future<List<Review>> getMyReviews() async {
+    final uid = OcSupabase.currentUserId;
+    if (uid == null) return [];
+    final data = await _client
+        .from('reviews')
+        .select('*, workshop_profiles(name_ar, logo_url)')
+        .eq('consumer_id', uid)
+        .order('created_at', ascending: false);
+    return (data as List).map((e) => Review.fromJson(e)).toList();
+  }
 }

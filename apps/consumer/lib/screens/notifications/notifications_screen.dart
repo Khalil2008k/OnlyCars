@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
 import '../../providers.dart';
 
@@ -8,7 +9,7 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifsAsync = ref.watch(notificationsProvider);
+    final notifsAsync = ref.watch(notificationsStreamProvider);
 
     return Scaffold(
       backgroundColor: OcColors.background,
@@ -37,7 +38,39 @@ class NotificationsScreen extends ConsumerWidget {
                 separatorBuilder: (_, __) => const SizedBox(height: OcSpacing.sm),
                 itemBuilder: (_, i) {
                   final n = notifs[i];
-                  return Container(
+                  return GestureDetector(
+                    onTap: () async {
+                      // Mark as read
+                      if (!n.isRead) {
+                        await ref.read(notificationServiceProvider).markAsRead(n.id);
+                        ref.invalidate(notificationsProvider);
+                        ref.invalidate(unreadNotifCountProvider);
+                      }
+                      // Navigate based on type
+                      if (!context.mounted) return;
+                      final data = n.data;
+                      switch (n.type) {
+                        case 'order_status':
+                        case 'order':
+                          if (data.containsKey('order_id')) context.push('/order/${data['order_id']}');
+                          break;
+                        case 'chat_message':
+                        case 'chat':
+                          if (data.containsKey('room_id')) context.push('/chat/${data['room_id']}');
+                          break;
+                        case 'diagnosis_report':
+                        case 'diagnosis':
+                          if (data.containsKey('report_id')) context.push('/diagnosis/${data['report_id']}');
+                          break;
+                        case 'workshop_bill':
+                          if (data.containsKey('bill_id')) context.push('/bill/${data['bill_id']}');
+                          break;
+                        case 'review':
+                          if (data.containsKey('order_id')) context.push('/rate/${data['order_id']}');
+                          break;
+                      }
+                    },
+                    child: Container(
                     padding: const EdgeInsets.all(OcSpacing.lg),
                     decoration: BoxDecoration(
                       color: n.isRead ? OcColors.surfaceCard : OcColors.primary.withValues(alpha: 0.08),
@@ -70,6 +103,7 @@ class NotificationsScreen extends ConsumerWidget {
                           Container(width: 8, height: 8, decoration: const BoxDecoration(color: OcColors.primary, shape: BoxShape.circle)),
                       ],
                     ),
+                  ),
                   );
                 },
               ),
@@ -81,10 +115,11 @@ class NotificationsScreen extends ConsumerWidget {
 
   IconData _iconForType(String type) {
     return switch (type) {
-      'order' => Icons.receipt_long_rounded,
-      'chat' => Icons.chat_rounded,
+      'order' || 'order_status' => Icons.receipt_long_rounded,
+      'chat' || 'chat_message' => Icons.chat_rounded,
       'review' => Icons.star_rounded,
-      'diagnosis' => Icons.assignment_rounded,
+      'diagnosis' || 'diagnosis_report' => Icons.assignment_rounded,
+      'workshop_bill' => Icons.receipt_rounded,
       _ => Icons.notifications_rounded,
     };
   }

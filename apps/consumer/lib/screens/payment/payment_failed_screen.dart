@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
 
 class PaymentFailedScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class PaymentFailedScreen extends StatelessWidget {
                   label: 'إعادة المحاولة',
                   onPressed: () {
                     if (orderId != null) {
-                      Navigator.of(context).pushReplacementNamed('/checkout');
+                      context.go('/checkout');
                     }
                   },
                   icon: Icons.refresh_rounded,
@@ -51,7 +52,7 @@ class PaymentFailedScreen extends StatelessWidget {
               ),
               const SizedBox(height: OcSpacing.md),
               TextButton(
-                onPressed: () => Navigator.of(context).pushReplacementNamed('/'),
+                onPressed: () => context.go('/home'),
                 child: const Text('العودة للرئيسية'),
               ),
             ],

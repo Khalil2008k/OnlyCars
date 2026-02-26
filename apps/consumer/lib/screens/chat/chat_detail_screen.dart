@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:oc_api/oc_api.dart';
+import 'package:oc_models/oc_models.dart';
 import 'package:oc_ui/oc_ui.dart';
+import '../../providers.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -14,40 +18,95 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
 class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   final _msgCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-
-  // Mock messages for UI demo
-  final List<Map<String, dynamic>> _messages = [
-    {'text': 'السلام عليكم، سيارتي تحتاج فحص', 'isMe': true, 'time': '10:30'},
-    {'text': 'وعليكم السلام! أهلاً، أي نوع سيارة؟', 'isMe': false, 'time': '10:31'},
-    {'text': 'تويوتا كامري 2022', 'isMe': true, 'time': '10:32'},
-    {'text': 'تمام، ممكن تمر علينا بكرة الصبح؟', 'isMe': false, 'time': '10:33'},
-    {'text': 'إن شاء الله، الساعة 9؟', 'isMe': true, 'time': '10:34'},
-    {'text': 'تمام 👍', 'isMe': false, 'time': '10:34'},
-  ];
+  List<ChatMessage> _messages = [];
+  StreamSubscription? _subscription;
+  bool _isLoading = true;
+  String? _currentUid;
 
   @override
-  void dispose() {
-    _msgCtrl.dispose();
-    _scrollCtrl.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _currentUid = OcSupabase.currentUserId;
+    _loadMessages();
+    _markAsRead();
   }
 
-  void _send() {
-    final text = _msgCtrl.text.trim();
-    if (text.isEmpty) return;
+  Future<void> _loadMessages() async {
+    try {
+      final chatService = ref.read(chatServiceProvider);
+      final msgs = await chatService.getMessages(widget.roomId, limit: 100);
+      if (!mounted) return;
+      setState(() {
+        _messages = msgs.reversed.toList(); // oldest first
+        _isLoading = false;
+      });
+      _scrollToBottom();
+      _subscribeToNewMessages();
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
-    setState(() {
-      _messages.add({'text': text, 'isMe': true, 'time': TimeOfDay.now().format(context)});
+  void _subscribeToNewMessages() {
+    final chatService = ref.read(chatServiceProvider);
+    _subscription = chatService.subscribeToMessages(widget.roomId).listen((msg) {
+      if (!mounted) return;
+      setState(() {
+        // Avoid duplicates
+        if (!_messages.any((m) => m.id == msg.id)) {
+          _messages.add(msg);
+        }
+      });
+      _scrollToBottom();
+      // Mark incoming messages as read
+      if (msg.senderId != _currentUid) {
+        chatService.markAsRead(widget.roomId);
+      }
     });
-    _msgCtrl.clear();
+  }
 
+  Future<void> _markAsRead() async {
+    try {
+      final chatService = ref.read(chatServiceProvider);
+      await chatService.markAsRead(widget.roomId);
+    } catch (_) {}
+  }
+
+  void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted || !_scrollCtrl.hasClients) return;
       _scrollCtrl.animateTo(
         _scrollCtrl.position.maxScrollExtent + 80,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     });
+  }
+
+  Future<void> _send() async {
+    final text = _msgCtrl.text.trim();
+    if (text.isEmpty) return;
+    _msgCtrl.clear();
+
+    try {
+      final chatService = ref.read(chatServiceProvider);
+      await chatService.sendMessage(roomId: widget.roomId, content: text);
+      // Message will appear via subscription
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('فشل إرسال الرسالة')),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -58,65 +117,94 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         title: const Text('محادثة'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            ref.invalidate(chatRoomsProvider); // refresh unread counts
+            context.pop();
+          },
         ),
-        actions: [
-          IconButton(icon: const Icon(Icons.call_outlined), onPressed: () {}),
-        ],
       ),
       body: Column(
         children: [
           // Messages
           Expanded(
-            child: ListView.builder(
-              controller: _scrollCtrl,
-              padding: const EdgeInsets.all(OcSpacing.lg),
-              itemCount: _messages.length,
-              itemBuilder: (_, i) {
-                final msg = _messages[i];
-                final isMe = msg['isMe'] as bool;
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _messages.isEmpty
+                    ? const Center(child: Text('ابدأ المحادثة...', style: TextStyle(color: OcColors.textSecondary)))
+                    : ListView.builder(
+                        controller: _scrollCtrl,
+                        padding: const EdgeInsets.all(OcSpacing.lg),
+                        itemCount: _messages.length,
+                        itemBuilder: (_, i) {
+                          final msg = _messages[i];
+                          final isMe = msg.senderId == _currentUid;
 
-                return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: OcSpacing.sm),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                    decoration: BoxDecoration(
-                      color: isMe ? OcColors.primary : OcColors.surfaceCard,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isMe ? 16 : 4),
-                        bottomRight: Radius.circular(isMe ? 4 : 16),
+                          return Align(
+                            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: OcSpacing.sm),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                              decoration: BoxDecoration(
+                                color: isMe ? OcColors.primary : OcColors.surfaceCard,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(16),
+                                  topRight: const Radius.circular(16),
+                                  bottomLeft: Radius.circular(isMe ? 16 : 4),
+                                  bottomRight: Radius.circular(isMe ? 4 : 16),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // Image message
+                                  if (msg.type == 'image' && msg.mediaUrl != null) ...[
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(msg.mediaUrl!, width: 200, fit: BoxFit.cover),
+                                    ),
+                                    if (msg.content != null && msg.content!.isNotEmpty)
+                                      const SizedBox(height: 6),
+                                  ],
+
+                                  // Text content
+                                  if (msg.content != null && msg.content!.isNotEmpty)
+                                    Text(
+                                      msg.content!,
+                                      style: TextStyle(
+                                        color: isMe ? OcColors.textOnPrimary : OcColors.textPrimary,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  const SizedBox(height: 4),
+
+                                  // Time + read status
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _formatTime(msg.createdAt),
+                                        style: TextStyle(
+                                          color: isMe ? OcColors.textOnPrimary.withValues(alpha: 0.7) : OcColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      if (isMe) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          msg.isRead ? Icons.done_all : Icons.done,
+                                          size: 14,
+                                          color: msg.isRead ? Colors.lightBlueAccent : OcColors.textOnPrimary.withValues(alpha: 0.5),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          msg['text'] as String,
-                          style: TextStyle(
-                            color: isMe ? OcColors.textOnPrimary : OcColors.textPrimary,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          msg['time'] as String,
-                          style: TextStyle(
-                            color: isMe
-                                ? OcColors.textOnPrimary.withValues(alpha: 0.7)
-                                : OcColors.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
           ),
 
           // Input bar
@@ -130,10 +218,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               top: false,
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.attach_file_rounded, color: OcColors.textSecondary),
-                    onPressed: () {},
-                  ),
                   Expanded(
                     child: TextField(
                       controller: _msgCtrl,
@@ -142,6 +226,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                       ),
+                      textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                     ),
                   ),
@@ -162,5 +247,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         ],
       ),
     );
+  }
+
+  String _formatTime(DateTime? dt) {
+    if (dt == null) return '';
+    final local = dt.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
+import '../../providers.dart';
 
 class VehicleAddScreen extends ConsumerStatefulWidget {
   const VehicleAddScreen({super.key});
@@ -35,14 +36,33 @@ class _VehicleAddScreenState extends ConsumerState<VehicleAddScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    // TODO: save vehicle to Supabase via UserService
-    await Future.delayed(const Duration(seconds: 1));
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تمت إضافة السيارة بنجاح')),
-    );
-    context.pop();
+    try {
+      final service = ref.read(userServiceProvider);
+      await service.addVehicle(
+        make: _makeCtrl.text.trim(),
+        model: _modelCtrl.text.trim(),
+        year: int.parse(_yearCtrl.text.trim()),
+        plateNumber: _plateCtrl.text.trim().isNotEmpty ? _plateCtrl.text.trim() : null,
+        color: _colorCtrl.text.trim().isNotEmpty ? _colorCtrl.text.trim() : null,
+        vin: _vinCtrl.text.trim().isNotEmpty ? _vinCtrl.text.trim() : null,
+      );
+
+      ref.invalidate(vehiclesProvider);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تمت إضافة السيارة بنجاح')),
+      );
+      context.pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e')),
+        );
+      }
+    }
   }
 
   @override

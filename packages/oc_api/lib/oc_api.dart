@@ -14,3 +14,6 @@ export 'src/order_service.dart';
 export 'src/chat_service.dart';
 export 'src/notification_service.dart';
 export 'src/diagnosis_service.dart';
+export 'src/payment_service.dart';
+export 'src/bill_service.dart';
+export 'src/favorites_service.dart';

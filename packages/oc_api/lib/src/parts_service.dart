@@ -87,4 +87,15 @@ class PartsService {
 
     return (partsData as List).map((e) => Part.fromJson(e)).toList();
   }
+
+  /// Get parts by shop ID.
+  Future<List<Part>> getPartsByShopId(String shopId) async {
+    final data = await _client
+        .from('parts')
+        .select('*, shop_profiles(*), part_categories(*)')
+        .eq('shop_id', shopId)
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+    return (data as List).map((e) => Part.fromJson(e)).toList();
+  }
 }

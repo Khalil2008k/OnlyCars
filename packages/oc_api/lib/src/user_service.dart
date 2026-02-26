@@ -105,4 +105,32 @@ class UserService {
     }).select().single();
     return Address.fromJson(data);
   }
+
+  /// Delete an address.
+  Future<void> deleteAddress(String id) async {
+    await _client.from('addresses').delete().eq('id', id);
+  }
+
+  /// Update an address.
+  Future<void> updateAddress(String id, {
+    String? label,
+    String? zone,
+    String? street,
+    String? building,
+    double? lat,
+    double? lng,
+    bool? isDefault,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (label != null) updates['label'] = label;
+    if (zone != null) updates['zone'] = zone;
+    if (street != null) updates['street'] = street;
+    if (building != null) updates['building'] = building;
+    if (lat != null) updates['lat'] = lat;
+    if (lng != null) updates['lng'] = lng;
+    if (isDefault != null) updates['is_default'] = isDefault;
+    if (updates.isNotEmpty) {
+      await _client.from('addresses').update(updates).eq('id', id);
+    }
+  }
 }

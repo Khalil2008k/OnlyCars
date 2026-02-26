@@ -40,7 +40,7 @@ class OrderService {
     final orderId = orderData['id'] as String;
 
     // Insert order items
-    final orderItems = items.map((item) => {
+    final orderItems = items.map((item) => <String, dynamic>{
       'order_id': orderId,
       'part_id': item['part_id'],
       'shop_id': item['shop_id'],
@@ -74,6 +74,19 @@ class OrderService {
         .eq('id', id)
         .maybeSingle();
     return data != null ? Order.fromJson(data) : null;
+  }
+
+  /// Stream order updates in real-time via Supabase Realtime.
+  /// Emits the full Order each time the row changes (status, driver, etc).
+  Stream<Order?> streamOrder(String id) {
+    return _client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .eq('id', id)
+        .map((data) {
+      if (data.isEmpty) return null;
+      return Order.fromJson(data.first);
+    });
   }
 
   /// Update order status.

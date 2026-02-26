@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
 import '../../providers.dart';
 
@@ -44,22 +45,60 @@ class CartScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(OcSpacing.lg),
               itemCount: cart.length,
-              separatorBuilder: (_, _) => const SizedBox(height: OcSpacing.md),
+              separatorBuilder: (_, __) => const SizedBox(height: OcSpacing.md),
               itemBuilder: (_, i) {
-                final partId = cart.keys.elementAt(i);
-                final qty = cart[partId]!;
+                final entry = cart.entries.elementAt(i);
+                final ci = entry.value;
                 return _CartItemCard(
-                  partId: partId,
-                  quantity: qty,
-                  onAdd: () => cartNotifier.add(partId),
-                  onRemove: () => cartNotifier.remove(partId),
+                  cartItem: ci,
+                  onAdd: () => cartNotifier.add(ci.part),
+                  onRemove: () => cartNotifier.remove(ci.part.id),
                 );
               },
             ),
           ),
 
-          // Workshop code + checkout
-          _CheckoutBar(cart: cart),
+          // Checkout bar
+          Container(
+            padding: const EdgeInsets.all(OcSpacing.lg),
+            decoration: const BoxDecoration(
+              color: OcColors.surfaceCard,
+              border: Border(top: BorderSide(color: OcColors.border)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Total
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('الإجمالي', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        '${cartNotifier.totalPrice.toStringAsFixed(0)} ر.ق',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: OcColors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: OcSpacing.md),
+
+                  // Checkout button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OcButton(
+                      label: 'إتمام الطلب',
+                      icon: Icons.payment_rounded,
+                      onPressed: () => context.push('/checkout'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -67,20 +106,21 @@ class CartScreen extends ConsumerWidget {
 }
 
 class _CartItemCard extends StatelessWidget {
-  final String partId;
-  final int quantity;
+  final CartItem cartItem;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
 
   const _CartItemCard({
-    required this.partId,
-    required this.quantity,
+    required this.cartItem,
     required this.onAdd,
     required this.onRemove,
   });
 
   @override
   Widget build(BuildContext context) {
+    final part = cartItem.part;
+    final imageUrl = part.imageUrls.isNotEmpty ? part.imageUrls.first : null;
+
     return Container(
       padding: const EdgeInsets.all(OcSpacing.md),
       decoration: BoxDecoration(
@@ -90,15 +130,20 @@ class _CartItemCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Image placeholder
+          // Image
           Container(
             width: 64,
             height: 64,
             decoration: BoxDecoration(
               color: OcColors.surfaceLight,
               borderRadius: BorderRadius.circular(OcRadius.md),
+              image: imageUrl != null
+                  ? DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover)
+                  : null,
             ),
-            child: const Icon(Icons.image_outlined, color: OcColors.textSecondary),
+            child: imageUrl == null
+                ? const Icon(Icons.image_outlined, color: OcColors.textSecondary)
+                : null,
           ),
           const SizedBox(width: OcSpacing.md),
 
@@ -108,12 +153,14 @@ class _CartItemCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'قطعة #${partId.substring(0, 6)}',
+                  part.nameAr,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '-- ر.ق',
+                  '${part.price.toStringAsFixed(0)} ر.ق',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: OcColors.secondary,
                         fontWeight: FontWeight.w600,
@@ -138,7 +185,7 @@ class _CartItemCard extends StatelessWidget {
                   constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
                 Text(
-                  '$quantity',
+                  '${cartItem.quantity}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 IconButton(
@@ -150,84 +197,6 @@ class _CartItemCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CheckoutBar extends StatefulWidget {
-  final Map<String, int> cart;
-  const _CheckoutBar({required this.cart});
-
-  @override
-  State<_CheckoutBar> createState() => _CheckoutBarState();
-}
-
-class _CheckoutBarState extends State<_CheckoutBar> {
-  final _codeCtrl = TextEditingController();
-  bool _isValidCode = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(OcSpacing.lg),
-      decoration: const BoxDecoration(
-        color: OcColors.surfaceCard,
-        border: Border(top: BorderSide(color: OcColors.border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Workshop code
-            TextField(
-              controller: _codeCtrl,
-              decoration: InputDecoration(
-                hintText: 'كود الورشة (اختياري)',
-                prefixIcon: const Icon(Icons.qr_code_rounded),
-                suffixIcon: _isValidCode
-                    ? const Icon(Icons.check_circle, color: OcColors.success)
-                    : null,
-              ),
-              onChanged: (val) {
-                setState(() => _isValidCode = val.length == 6);
-              },
-            ),
-            const SizedBox(height: OcSpacing.md),
-
-            // Total
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('الإجمالي', style: Theme.of(context).textTheme.titleMedium),
-                Text(
-                  '-- ر.ق',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: OcColors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: OcSpacing.md),
-
-            // Checkout button
-            SizedBox(
-              width: double.infinity,
-              child: OcButton(
-                label: 'إتمام الطلب',
-                icon: Icons.payment_rounded,
-                onPressed: () {
-                  // TODO: checkout flow
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('سيتم ربط الدفع قريباً')),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

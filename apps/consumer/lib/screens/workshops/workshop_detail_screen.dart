@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:oc_api/oc_api.dart';
 import 'package:oc_models/oc_models.dart';
 import 'package:oc_ui/oc_ui.dart';
+import '../../providers.dart';
 
 final workshopDetailProvider =
     FutureProvider.family<WorkshopProfile?, String>((ref, id) async {
@@ -15,8 +17,6 @@ final workshopReviewsProvider =
   final service = ref.read(workshopServiceProvider);
   return await service.getReviews(workshopId);
 });
-
-final workshopServiceProvider = Provider((_) => WorkshopService());
 
 class WorkshopDetailScreen extends ConsumerWidget {
   final String workshopId;
@@ -34,45 +34,112 @@ class WorkshopDetailScreen extends ConsumerWidget {
             ? const OcErrorState(message: 'الورشة غير موجودة')
             : CustomScrollView(
                 slivers: [
-                  // Cover + back button
+                  // Cover photo with gradient overlay
                   SliverAppBar(
-                    expandedHeight: 200,
+                    expandedHeight: 240,
                     pinned: true,
                     backgroundColor: OcColors.surface,
+                    leading: IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Colors.black38,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_back_ios_rounded, size: 18, color: Colors.white),
+                      ),
+                      onPressed: () => context.pop(),
+                    ),
+                    actions: [
+                      // Favorite button
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(color: Colors.black38, shape: BoxShape.circle),
+                          child: const Icon(Icons.favorite_border_rounded, size: 18, color: Colors.white),
+                        ),
+                        onPressed: () async {
+                          final favService = ref.read(favoritesServiceProvider);
+                          final isFav = await favService.toggleFavorite(workshopId: workshopId);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(isFav ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
                     flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        color: OcColors.surfaceLight,
-                        child: workshop.coverPhotoUrl != null
-                            ? Image.network(workshop.coverPhotoUrl!,
-                                fit: BoxFit.cover)
-                            : const Center(
-                                child: Icon(Icons.build_circle_rounded,
-                                    size: 64, color: OcColors.textSecondary)),
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          workshop.coverPhotoUrl != null
+                              ? Image.network(workshop.coverPhotoUrl!, fit: BoxFit.cover)
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [OcColors.primary, OcColors.primary.withValues(alpha: 0.6)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                  child: const Center(child: Icon(Icons.build_circle_rounded, size: 64, color: Colors.white54)),
+                                ),
+                          // Gradient overlay for text readability
+                          const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.transparent, Colors.black54],
+                              ),
+                            ),
+                          ),
+                          // Workshop name at bottom
+                          Positioned(
+                            bottom: 16,
+                            left: 16,
+                            right: 16,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    workshop.nameAr,
+                                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                if (workshop.isVerified)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: OcColors.info,
+                                      borderRadius: BorderRadius.circular(OcRadius.pill),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.verified_rounded, color: Colors.white, size: 14),
+                                        SizedBox(width: 4),
+                                        Text('موثقة', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
 
-                  // Workshop info
+                  // Content
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(OcSpacing.xl),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  workshop.nameAr,
-                                  style: Theme.of(context).textTheme.displaySmall,
-                                ),
-                              ),
-                              if (workshop.isVerified)
-                                const Icon(Icons.verified_rounded,
-                                    color: OcColors.info, size: 24),
-                            ],
-                          ),
-                          const SizedBox(height: OcSpacing.sm),
+                          // Rating + Status
                           Row(
                             children: [
                               OcRating(
@@ -82,47 +149,47 @@ class WorkshopDetailScreen extends ConsumerWidget {
                               const Spacer(),
                               OcStatusBadge(
                                 label: workshop.isOpenNow ? 'مفتوح الآن' : 'مغلق',
-                                color: workshop.isOpenNow
-                                    ? OcColors.success
-                                    : OcColors.error,
+                                color: workshop.isOpenNow ? OcColors.success : OcColors.error,
                               ),
                             ],
                           ),
-                          const SizedBox(height: OcSpacing.lg),
 
-                          // Location
+                          const SizedBox(height: OcSpacing.xl),
+
+                          // Description
+                          if (workshop.descriptionAr != null && workshop.descriptionAr!.isNotEmpty) ...[
+                            Text('عن الورشة', style: Theme.of(context).textTheme.titleLarge),
+                            const SizedBox(height: OcSpacing.sm),
+                            Text(
+                              workshop.descriptionAr!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: OcColors.textDarkSecondary,
+                                height: 1.6,
+                              ),
+                            ),
+                            const SizedBox(height: OcSpacing.xl),
+                          ],
+
+                          // Info rows
                           _InfoRow(
                             icon: Icons.location_on_outlined,
                             text: [workshop.zone, workshop.street, workshop.building]
                                 .where((s) => s != null && s.isNotEmpty)
                                 .join(', '),
                           ),
-
-                          // Phone
                           if (workshop.phone != null)
-                            _InfoRow(
-                              icon: Icons.phone_outlined,
-                              text: workshop.phone!,
-                            ),
-
-                          // Hours
+                            _InfoRow(icon: Icons.phone_outlined, text: workshop.phone!),
                           _InfoRow(
                             icon: Icons.schedule_outlined,
                             text: '${workshop.workingDays} • ${workshop.workingHours}',
                           ),
-
-                          // Code
-                          _InfoRow(
-                            icon: Icons.qr_code_rounded,
-                            text: 'كود الورشة: ${workshop.code}',
-                          ),
+                          _InfoRow(icon: Icons.qr_code_rounded, text: 'كود الورشة: ${workshop.code}'),
 
                           const SizedBox(height: OcSpacing.xl),
 
                           // Specialties
                           if (workshop.specialties.isNotEmpty) ...[
-                            Text('التخصصات',
-                                style: Theme.of(context).textTheme.titleLarge),
+                            Text('التخصصات', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: OcSpacing.sm),
                             Wrap(
                               spacing: OcSpacing.sm,
@@ -134,14 +201,14 @@ class WorkshopDetailScreen extends ConsumerWidget {
                             const SizedBox(height: OcSpacing.xl),
                           ],
 
-                          // Stats
+                          // Stats row
                           Row(
                             children: [
                               _StatCard(
                                 label: 'التقييم',
                                 value: workshop.avgRating.toStringAsFixed(1),
                                 icon: Icons.star_rounded,
-                                color: OcColors.secondary,
+                                color: OcColors.starAmber,
                               ),
                               const SizedBox(width: OcSpacing.md),
                               _StatCard(
@@ -162,25 +229,77 @@ class WorkshopDetailScreen extends ConsumerWidget {
 
                           const SizedBox(height: OcSpacing.xxl),
 
+                          // Gallery / Portfolio
+                          if (workshop.galleryUrls.isNotEmpty) ...[
+                            Text('معرض الأعمال', style: Theme.of(context).textTheme.titleLarge),
+                            const SizedBox(height: OcSpacing.sm),
+                            Text(
+                              'صور لسيارات تم إصلاحها في الورشة',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: OcColors.textSecondary),
+                            ),
+                            const SizedBox(height: OcSpacing.md),
+                            SizedBox(
+                              height: 180,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: workshop.galleryUrls.length,
+                                separatorBuilder: (_, __) => const SizedBox(width: OcSpacing.md),
+                                itemBuilder: (_, i) => GestureDetector(
+                                  onTap: () => _showGalleryDialog(context, workshop.galleryUrls, i),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(OcRadius.lg),
+                                    child: Image.network(
+                                      workshop.galleryUrls[i],
+                                      width: 240,
+                                      height: 180,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: OcSpacing.xxl),
+                          ],
+
                           // Action buttons
                           OcButton(
                             label: 'تواصل مع الورشة',
                             icon: Icons.chat_rounded,
-                            onPressed: () {},
+                            onPressed: () async {
+                              try {
+                                final chatService = ref.read(chatServiceProvider);
+                                final room = await chatService.getOrCreateRoom(otherUserId: workshop.userId);
+                                if (context.mounted) context.push('/chat/${room.id}');
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('خطأ: $e')),
+                                  );
+                                }
+                              }
+                            },
                           ),
                           const SizedBox(height: OcSpacing.md),
                           OcButton(
                             label: 'اطلب قطع عبر هذه الورشة',
                             icon: Icons.shopping_cart_rounded,
                             outlined: true,
-                            onPressed: () {},
+                            onPressed: () => context.push('/marketplace'),
                           ),
 
                           const SizedBox(height: OcSpacing.xxl),
 
-                          // Reviews
-                          Text('التقييمات',
-                              style: Theme.of(context).textTheme.headlineMedium),
+                          // Reviews header
+                          Row(
+                            children: [
+                              Text('التقييمات', style: Theme.of(context).textTheme.headlineMedium),
+                              const Spacer(),
+                              Text(
+                                '${workshop.totalReviews} تقييم',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: OcColors.textSecondary),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: OcSpacing.md),
                         ],
                       ),
@@ -192,8 +311,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
                     data: (reviews) => reviews.isEmpty
                         ? SliverToBoxAdapter(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: OcSpacing.xl),
+                              padding: const EdgeInsets.symmetric(horizontal: OcSpacing.xl),
                               child: Text(
                                 'لا توجد تقييمات بعد',
                                 style: TextStyle(color: OcColors.textSecondary),
@@ -231,6 +349,46 @@ class WorkshopDetailScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showGalleryDialog(BuildContext context, List<String> urls, int initial) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        child: SizedBox(
+          width: double.infinity,
+          height: 400,
+          child: PageView.builder(
+            controller: PageController(initialPage: initial),
+            itemCount: urls.length,
+            itemBuilder: (_, i) => Stack(
+              children: [
+                Center(child: Image.network(urls[i], fit: BoxFit.contain)),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Positioned(
+                  bottom: 12,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    '${i + 1} / ${urls.length}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _InfoRow extends StatelessWidget {
@@ -245,13 +403,13 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: OcSpacing.sm),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: OcColors.textSecondary),
+          Icon(icon, size: 16, color: OcColors.textDarkSecondary),
           const SizedBox(width: OcSpacing.sm),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: OcColors.textSecondary,
+                    color: OcColors.textDarkSecondary,
                   ),
             ),
           ),
@@ -344,7 +502,7 @@ class _ReviewCard extends StatelessWidget {
             Text(
               review.commentAr!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: OcColors.textSecondary,
+                    color: OcColors.textDarkSecondary,
                   ),
             ),
           ],

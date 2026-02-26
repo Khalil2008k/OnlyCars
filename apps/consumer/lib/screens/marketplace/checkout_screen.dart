@@ -12,77 +12,114 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  String _paymentMethod = 'cash';
-  bool _isLoading = false;
+  String _paymentMethod = 'cod';
+  String? _selectedAddressId;
+  bool _isPlacing = false;
 
   Future<void> _placeOrder() async {
-    setState(() => _isLoading = true);
+    final cart = ref.read(cartProvider);
+    if (cart.isEmpty) return;
 
-    // TODO: call place-order Edge Function
-    await Future.delayed(const Duration(seconds: 2));
+    final cartNotifier = ref.read(cartProvider.notifier);
 
-    if (!mounted) return;
+    if (_selectedAddressId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('اختر عنوان التوصيل')),
+      );
+      return;
+    }
 
-    // Clear cart
-    ref.read(cartProvider.notifier).clear();
+    setState(() => _isPlacing = true);
 
-    // Show success
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: OcColors.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(OcRadius.xl)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: OcSpacing.lg),
-            Container(
-              width: 72, height: 72,
-              decoration: BoxDecoration(
-                color: OcColors.success.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle_rounded, color: OcColors.success, size: 48),
-            ),
-            const SizedBox(height: OcSpacing.xl),
-            Text('تم تأكيد الطلب', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: OcSpacing.sm),
-            Text('سيتم إشعارك بتحديثات الطلب', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: OcColors.textSecondary)),
-            const SizedBox(height: OcSpacing.xxl),
-            SizedBox(
-              width: double.infinity,
-              child: OcButton(
-                label: 'تتبع الطلب',
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.go('/orders');
-                },
-                icon: Icons.local_shipping_rounded,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    try {
+      final orderService = ref.read(orderServiceProvider);
+      final order = await orderService.createOrder(
+        items: cartNotifier.toOrderItems(),
+        deliveryAddressId: _selectedAddressId,
+      );
+
+      // Create payment record
+      final paymentService = ref.read(paymentServiceProvider);
+      await paymentService.createPayment(
+        orderId: order.id,
+        amount: order.total,
+        type: _paymentMethod,
+      );
+
+      cartNotifier.clear();
+
+      if (!mounted) return;
+      context.go('/payment/success?order=${order.id}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isPlacing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل إنشاء الطلب: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cart = ref.watch(cartProvider);
+    final cartNotifier = ref.read(cartProvider.notifier);
+    final addressesAsync = ref.watch(addressesProvider);
+
+    final partsTotal = cartNotifier.totalPrice;
+    final deliveryFee = 15.0;
+    final platformFee = partsTotal * 0.05;
+    final grandTotal = partsTotal + deliveryFee + platformFee;
+
     return Scaffold(
       backgroundColor: OcColors.background,
-      appBar: AppBar(
-        title: const Text('إتمام الطلب'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_rounded), onPressed: () => context.pop()),
-      ),
+      appBar: AppBar(title: const Text('إتمام الطلب')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(OcSpacing.xl),
+        padding: const EdgeInsets.all(OcSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Delivery address
+            // Address selection
             Text('عنوان التوصيل', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: OcSpacing.md),
+
+            addressesAsync.when(
+              data: (addresses) {
+                if (addresses.isEmpty) {
+                  return OutlinedButton.icon(
+                    onPressed: () => context.push('/addresses'),
+                    icon: const Icon(Icons.add_location_rounded),
+                    label: const Text('أضف عنوان'),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+                  );
+                }
+
+                // Auto-select first or default address
+                if (_selectedAddressId == null) {
+                  final def = addresses.where((a) => a.isDefault).firstOrNull;
+                  _selectedAddressId = def?.id ?? addresses.first.id;
+                }
+
+                return Column(
+                  children: addresses.map((addr) => RadioListTile<String>(
+                    value: addr.id,
+                    groupValue: _selectedAddressId,
+                    onChanged: (v) => setState(() => _selectedAddressId = v),
+                    title: Text(addr.label),
+                    subtitle: Text([addr.zone, addr.street, addr.building].where((s) => s != null && s.isNotEmpty).join(', ')),
+                    contentPadding: EdgeInsets.zero,
+                  )).toList(),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => const Text('تعذر تحميل العناوين'),
+            ),
+
+            const SizedBox(height: OcSpacing.xl),
+
+            // Order summary
+            Text('ملخص الطلب', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: OcSpacing.md),
+
             Container(
               padding: const EdgeInsets.all(OcSpacing.lg),
               decoration: BoxDecoration(
@@ -90,90 +127,78 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 borderRadius: BorderRadius.circular(OcRadius.lg),
                 border: Border.all(color: OcColors.border),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  const Icon(Icons.location_on_rounded, color: OcColors.primary),
-                  const SizedBox(width: OcSpacing.md),
-                  Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('الدوحة — المنطقة الصناعية', style: Theme.of(context).textTheme.titleSmall),
-                      Text('شارع 10، مبنى 45', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: OcColors.textSecondary)),
-                    ],
+                  // Items
+                  ...cart.values.map((ci) => Padding(
+                    padding: const EdgeInsets.only(bottom: OcSpacing.sm),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text('${ci.part.nameAr} × ${ci.quantity}', style: Theme.of(context).textTheme.bodyMedium)),
+                        Text('${(ci.part.price * ci.quantity).toStringAsFixed(0)} ر.ق', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   )),
-                  TextButton(onPressed: () {}, child: const Text('تغيير')),
+
+                  const Divider(height: OcSpacing.xl),
+
+                  _SummaryRow(label: 'إجمالي القطع', value: '${partsTotal.toStringAsFixed(0)} ر.ق'),
+                  const SizedBox(height: OcSpacing.sm),
+                  _SummaryRow(label: 'رسوم التوصيل', value: '${deliveryFee.toStringAsFixed(0)} ر.ق'),
+                  const SizedBox(height: OcSpacing.sm),
+                  _SummaryRow(label: 'رسوم المنصة (5%)', value: '${platformFee.toStringAsFixed(0)} ر.ق'),
+
+                  const Divider(height: OcSpacing.xl),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('الإجمالي', style: Theme.of(context).textTheme.titleMedium),
+                      Text('${grandTotal.toStringAsFixed(0)} ر.ق', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: OcColors.primary, fontWeight: FontWeight.w900)),
+                    ],
+                  ),
                 ],
               ),
             ),
 
-            const SizedBox(height: OcSpacing.xxl),
+            const SizedBox(height: OcSpacing.xl),
 
             // Payment method
             Text('طريقة الدفع', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: OcSpacing.md),
 
             _PaymentOption(
-              icon: Icons.payments_rounded,
-              title: 'الدفع عند الاستلام',
-              subtitle: 'ادفع نقداً للسائق',
-              value: 'cash',
+              icon: Icons.money_rounded,
+              label: 'الدفع عند الاستلام',
+              value: 'cod',
               groupValue: _paymentMethod,
-              onChanged: (v) => setState(() => _paymentMethod = v),
+              onChanged: (v) => setState(() => _paymentMethod = v!),
             ),
             const SizedBox(height: OcSpacing.sm),
             _PaymentOption(
               icon: Icons.credit_card_rounded,
-              title: 'Sadad',
-              subtitle: 'البطاقة البنكية — خدمة سداد',
-              value: 'sadad',
+              label: 'بطاقة ائتمان',
+              value: 'card',
               groupValue: _paymentMethod,
-              onChanged: (v) => setState(() => _paymentMethod = v),
+              onChanged: (v) => setState(() => _paymentMethod = v!),
+              subtitle: 'قريباً',
+              enabled: false,
             ),
 
             const SizedBox(height: OcSpacing.xxl),
 
-            // Order summary
-            Text('ملخص الطلب', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: OcSpacing.md),
-
-            Container(
-              padding: const EdgeInsets.all(OcSpacing.xl),
-              decoration: BoxDecoration(
-                color: OcColors.surfaceCard,
-                borderRadius: BorderRadius.circular(OcRadius.lg),
-                border: Border.all(color: OcColors.border),
-              ),
-              child: Column(
-                children: [
-                  _SummaryRow(label: 'المجموع الفرعي', value: '265 ر.ق'),
-                  const SizedBox(height: OcSpacing.sm),
-                  _SummaryRow(label: 'رسوم التوصيل', value: '25 ر.ق'),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: OcSpacing.md),
-                    child: Divider(color: OcColors.border),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('الإجمالي', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                      Text('290 ر.ق', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: OcColors.primary, fontWeight: FontWeight.w900)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: OcSpacing.xxl),
-
+            // Place order button
             SizedBox(
               width: double.infinity,
               child: OcButton(
                 label: 'تأكيد الطلب',
-                onPressed: _placeOrder,
-                isLoading: _isLoading,
                 icon: Icons.check_circle_rounded,
+                onPressed: _placeOrder,
+                isLoading: _isPlacing,
               ),
             ),
+
+            const SizedBox(height: OcSpacing.xl),
           ],
         ),
       ),
@@ -183,35 +208,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
 class _PaymentOption extends StatelessWidget {
   final IconData icon;
-  final String title, subtitle, value, groupValue;
-  final ValueChanged<String> onChanged;
-  const _PaymentOption({required this.icon, required this.title, required this.subtitle, required this.value, required this.groupValue, required this.onChanged});
+  final String label;
+  final String value;
+  final String groupValue;
+  final ValueChanged<String?> onChanged;
+  final String? subtitle;
+  final bool enabled;
+
+  const _PaymentOption({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.groupValue,
+    required this.onChanged,
+    this.subtitle,
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = value == groupValue;
-    return GestureDetector(
-      onTap: () => onChanged(value),
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5,
       child: Container(
-        padding: const EdgeInsets.all(OcSpacing.lg),
         decoration: BoxDecoration(
           color: OcColors.surfaceCard,
-          borderRadius: BorderRadius.circular(OcRadius.lg),
-          border: Border.all(color: isSelected ? OcColors.primary : OcColors.border, width: isSelected ? 2 : 1),
+          borderRadius: BorderRadius.circular(OcRadius.md),
+          border: Border.all(color: value == groupValue ? OcColors.primary : OcColors.border),
         ),
-        child: Row(
-          children: [
-            Icon(icon, color: isSelected ? OcColors.primary : OcColors.textSecondary),
-            const SizedBox(width: OcSpacing.md),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.titleSmall),
-                Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: OcColors.textSecondary)),
-              ],
-            )),
-            Radio<String>(value: value, groupValue: groupValue, onChanged: (v) => onChanged(v!)),
-          ],
+        child: RadioListTile<String>(
+          value: value,
+          groupValue: groupValue,
+          onChanged: enabled ? onChanged : null,
+          secondary: Icon(icon, color: OcColors.primary),
+          title: Text(label),
+          subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 12, color: OcColors.textSecondary)) : null,
         ),
       ),
     );
@@ -228,7 +258,7 @@ class _SummaryRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: OcColors.textSecondary)),
-        Text(value, style: Theme.of(context).textTheme.bodyMedium),
+        Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
       ],
     );
   }

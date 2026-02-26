@@ -33,6 +33,9 @@ abstract class WorkshopBill with _$WorkshopBill {
     @JsonKey(name: 'photo_urls') @Default([]) List<String> photoUrls,
     @Default('submitted') String status,
     @JsonKey(name: 'created_at') DateTime? createdAt,
+    // Joined data
+    @JsonKey(name: 'workshop_profiles') Map<String, dynamic>? workshop,
+    Map<String, dynamic>? orders,
   }) = _WorkshopBill;
 
   factory WorkshopBill.fromJson(Map<String, dynamic> json) =>

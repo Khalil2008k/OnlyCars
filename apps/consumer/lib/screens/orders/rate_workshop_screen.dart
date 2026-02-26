@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oc_ui/oc_ui.dart';
+import '../../providers.dart';
 
-class RateWorkshopScreen extends StatefulWidget {
+class RateWorkshopScreen extends ConsumerStatefulWidget {
   final String orderId;
   const RateWorkshopScreen({super.key, required this.orderId});
 
   @override
-  State<RateWorkshopScreen> createState() => _RateWorkshopScreenState();
+  ConsumerState<RateWorkshopScreen> createState() => _RateWorkshopScreenState();
 }
 
-class _RateWorkshopScreenState extends State<RateWorkshopScreen> {
+class _RateWorkshopScreenState extends ConsumerState<RateWorkshopScreen> {
   int _rating = 0;
   final _commentCtrl = TextEditingController();
   bool _isLoading = false;
@@ -30,14 +32,37 @@ class _RateWorkshopScreenState extends State<RateWorkshopScreen> {
     }
 
     setState(() => _isLoading = true);
-    // TODO: submit review to Supabase
-    await Future.delayed(const Duration(seconds: 1));
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('شكراً! تم إرسال التقييم')),
-    );
-    context.pop();
+    try {
+      // Fetch the order to get workshopId
+      final orderService = ref.read(orderServiceProvider);
+      final order = await orderService.getOrderById(widget.orderId);
+      if (order == null || order.workshopId == null) {
+        throw Exception('لم يتم العثور على الطلب أو الورشة');
+      }
+
+      final workshopService = ref.read(workshopServiceProvider);
+      await workshopService.submitReview(
+        workshopId: order.workshopId!,
+        rating: _rating,
+        commentAr: _commentCtrl.text.trim().isNotEmpty ? _commentCtrl.text.trim() : null,
+        orderId: widget.orderId,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('شكراً! تم إرسال التقييم')),
+      );
+      ref.invalidate(myReviewsProvider);
+      context.pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e')),
+        );
+      }
+    }
   }
 
   @override
