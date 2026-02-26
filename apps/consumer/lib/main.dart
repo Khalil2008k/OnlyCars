@@ -40,7 +40,7 @@ class OnlyCarsApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: OcTheme.light,
       darkTheme: OcTheme.dark,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       routerConfig: router,
       locale: const Locale('ar'),
       supportedLocales: const [
