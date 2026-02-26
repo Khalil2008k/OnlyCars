@@ -72,46 +72,16 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Logo placeholder
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: OcColors.primary,
-                        borderRadius: BorderRadius.circular(OcRadius.xl),
-                        boxShadow: [
-                          BoxShadow(
-                            color: OcColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 30,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'OC',
-                          style: TextStyle(
-                            color: OcColors.textOnPrimary,
-                            fontSize: 48,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 4,
-                          ),
-                        ),
-                      ),
+                    // Real OnlyCars logo (vertical variant)
+                    const OcLogo(
+                      size: 140,
+                      assetPath: OcLogoAssets.vertical,
                     ),
-                    const SizedBox(height: OcSpacing.xl),
-                    Text(
-                      'OnlyCars',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            color: OcColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: OcSpacing.sm),
+                    const SizedBox(height: OcSpacing.lg),
                     Text(
                       'كل شي لسيارتك',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: OcColors.secondary,
+                            color: OcColors.textSecondary,
                           ),
                     ),
                   ],

@@ -845,25 +845,52 @@ class OcCountdownBadge extends StatelessWidget {
 }
 
 // ────────────────────────────────────────────────────────
-// 16. OcLogo — OnlyCars brand logo (wing+checkmark)
+// 16. OcLogo — OnlyCars brand logo
 // ────────────────────────────────────────────────────────
 
-/// OnlyCars logo — wing speed lines + lime checkmark.
-/// Use [showText] to include "OnlyCars" text beside the icon.
+/// Standard asset paths for the OnlyCars logo variants.
+class OcLogoAssets {
+  OcLogoAssets._();
+  /// Horizontal logo — icon + "OnlyCars" text on the right (light bg).
+  static const horizontal = 'assets/images/logo_horizontal.png';
+  /// Vertical/stacked logo — icon above "OnlyCars" text (light bg).
+  static const vertical = 'assets/images/logo_vertical.png';
+  /// Dark background variant — icon above "OnlyCars" text.
+  static const dark = 'assets/images/logo_dark.png';
+}
+
+/// OnlyCars logo widget.
+/// - If [assetPath] is provided, renders the real logo image.
+/// - Otherwise falls back to the code-rendered wing+checkmark.
 class OcLogo extends StatelessWidget {
   final double size;
+  final String? assetPath;
   final bool showText;
   final bool darkBackground;
 
   const OcLogo({
     super.key,
     this.size = 32,
+    this.assetPath,
     this.showText = false,
     this.darkBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Use real image if asset path provided
+    if (assetPath != null) {
+      return Image.asset(
+        assetPath!,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => _buildFallback(),
+      );
+    }
+    return _buildFallback();
+  }
+
+  Widget _buildFallback() {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -898,14 +925,12 @@ class _LogoPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Wing/speed lines (dark or white)
     final wingPaint = Paint()
       ..color = darkBackground ? Colors.white : const Color(0xFF1A1A1A)
       ..strokeWidth = w * 0.06
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Three speed lines
     final line1 = Path()
       ..moveTo(w * 0.05, h * 0.35)
       ..quadraticBezierTo(w * 0.25, h * 0.2, w * 0.5, h * 0.25);
@@ -921,7 +946,6 @@ class _LogoPainter extends CustomPainter {
       ..quadraticBezierTo(w * 0.3, h * 0.5, w * 0.52, h * 0.5);
     canvas.drawPath(line3, wingPaint);
 
-    // Checkmark (lime green)
     final checkPaint = Paint()
       ..color = OcColors.accent
       ..strokeWidth = w * 0.09

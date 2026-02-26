@@ -106,9 +106,10 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(width: OcSpacing.sm),
                       Expanded(
                         child: _MiniServiceCard(
-                          icon: Icons.health_and_safety_rounded,
+                          icon: Icons.directions_car_rounded,
                           label: 'التشخيص',
                           color: const Color(0xFF2E7D32),
+                          overlay: const Icon(Icons.add_rounded, color: Colors.white, size: 12),
                           onTap: () {},
                         ),
                       ),
@@ -240,7 +241,7 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         // Brand logo
-        const OcLogo(size: 36, showText: true),
+        const OcLogo(size: 81, assetPath: OcLogoAssets.horizontal),
         const Spacer(),
         OcBadge(
           count: 0,
@@ -281,12 +282,14 @@ class _MiniServiceCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Widget? overlay;
   final VoidCallback? onTap;
 
   const _MiniServiceCard({
     required this.icon,
     required this.label,
     required this.color,
+    this.overlay,
     this.onTap,
   });
 
@@ -304,7 +307,25 @@ class _MiniServiceCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 26),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: color, size: 26),
+                if (overlay != null)
+                  Positioned(
+                    right: -6,
+                    bottom: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: overlay!,
+                    ),
+                  ),
+              ],
+            ),
             const SizedBox(height: 6),
             Text(
               label,
