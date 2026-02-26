@@ -84,36 +84,41 @@ class HomeScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: OcSpacing.page),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _MiniServiceCard(
-                          icon: Icons.build_circle_rounded,
-                          label: 'الورش',
-                          color: const Color(0xFF1976D2),
-                          onTap: () => context.push('/workshops'),
-                        ),
+                  child: Center(
+                    child: FractionallySizedBox(
+                      widthFactor: 0.55,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _MiniServiceCard(
+                              icon: Icons.build_circle_rounded,
+                              label: 'الورش',
+                              color: const Color(0xFF1976D2),
+                              onTap: () => context.push('/workshops'),
+                            ),
+                          ),
+                          const SizedBox(width: OcSpacing.sm),
+                          Expanded(
+                            child: _MiniServiceCard(
+                              icon: Icons.shopping_bag_rounded,
+                              label: 'قطع الغيار',
+                              color: const Color(0xFFE65100),
+                              onTap: () => context.push('/marketplace'),
+                            ),
+                          ),
+                          const SizedBox(width: OcSpacing.sm),
+                          Expanded(
+                            child: _MiniServiceCard(
+                              icon: Icons.directions_car_rounded,
+                              label: 'التشخيص',
+                              color: const Color(0xFF2E7D32),
+                              overlay: const Icon(Icons.add_rounded, color: Colors.white, size: 10),
+                              onTap: () {},
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: OcSpacing.sm),
-                      Expanded(
-                        child: _MiniServiceCard(
-                          icon: Icons.shopping_bag_rounded,
-                          label: 'قطع الغيار',
-                          color: const Color(0xFFE65100),
-                          onTap: () => context.push('/marketplace'),
-                        ),
-                      ),
-                      const SizedBox(width: OcSpacing.sm),
-                      Expanded(
-                        child: _MiniServiceCard(
-                          icon: Icons.directions_car_rounded,
-                          label: 'التشخيص',
-                          color: const Color(0xFF2E7D32),
-                          overlay: const Icon(Icons.add_rounded, color: Colors.white, size: 12),
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
