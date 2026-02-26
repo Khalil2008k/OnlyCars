@@ -843,3 +843,99 @@ class OcCountdownBadge extends StatelessWidget {
     );
   }
 }
+
+// ────────────────────────────────────────────────────────
+// 16. OcLogo — OnlyCars brand logo (wing+checkmark)
+// ────────────────────────────────────────────────────────
+
+/// OnlyCars logo — wing speed lines + lime checkmark.
+/// Use [showText] to include "OnlyCars" text beside the icon.
+class OcLogo extends StatelessWidget {
+  final double size;
+  final bool showText;
+  final bool darkBackground;
+
+  const OcLogo({
+    super.key,
+    this.size = 32,
+    this.showText = false,
+    this.darkBackground = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: size,
+          height: size,
+          child: CustomPaint(painter: _LogoPainter(darkBackground: darkBackground)),
+        ),
+        if (showText) ...[
+          SizedBox(width: size * 0.2),
+          Text(
+            'OnlyCars',
+            style: TextStyle(
+              fontSize: size * 0.5,
+              fontWeight: FontWeight.w800,
+              color: darkBackground ? Colors.white : OcColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _LogoPainter extends CustomPainter {
+  final bool darkBackground;
+  _LogoPainter({this.darkBackground = false});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Wing/speed lines (dark or white)
+    final wingPaint = Paint()
+      ..color = darkBackground ? Colors.white : const Color(0xFF1A1A1A)
+      ..strokeWidth = w * 0.06
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Three speed lines
+    final line1 = Path()
+      ..moveTo(w * 0.05, h * 0.35)
+      ..quadraticBezierTo(w * 0.25, h * 0.2, w * 0.5, h * 0.25);
+    canvas.drawPath(line1, wingPaint);
+
+    final line2 = Path()
+      ..moveTo(w * 0.08, h * 0.48)
+      ..quadraticBezierTo(w * 0.3, h * 0.35, w * 0.55, h * 0.38);
+    canvas.drawPath(line2, wingPaint);
+
+    final line3 = Path()
+      ..moveTo(w * 0.12, h * 0.6)
+      ..quadraticBezierTo(w * 0.3, h * 0.5, w * 0.52, h * 0.5);
+    canvas.drawPath(line3, wingPaint);
+
+    // Checkmark (lime green)
+    final checkPaint = Paint()
+      ..color = OcColors.accent
+      ..strokeWidth = w * 0.09
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    final check = Path()
+      ..moveTo(w * 0.38, h * 0.58)
+      ..lineTo(w * 0.55, h * 0.78)
+      ..lineTo(w * 0.92, h * 0.22);
+    canvas.drawPath(check, checkPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}

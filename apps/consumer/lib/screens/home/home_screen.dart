@@ -240,35 +240,8 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         // Brand logo
-        Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(
-            color: OcColors.accent,
-            borderRadius: BorderRadius.circular(OcRadius.md),
-          ),
-          child: const Center(
-            child: Text('OC', style: TextStyle(
-              color: OcColors.onAccent,
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-            )),
-          ),
-        ),
-        const SizedBox(width: OcSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('مرحباً 👋', style: TextStyle(color: OcColors.textMuted, fontSize: 12)),
-              Text(
-                name,
-                style: const TextStyle(
-                  color: OcColors.textPrimary, fontSize: 17, fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+        const OcLogo(size: 36, showText: true),
+        const Spacer(),
         OcBadge(
           count: 0,
           child: IconButton(
