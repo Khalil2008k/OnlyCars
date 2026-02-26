@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:oc_api/oc_api.dart';
 import 'package:oc_ui/oc_ui.dart';
 
+/// Two-step sign up: 1) Name + details  2) Phone + OTP verification
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -11,15 +12,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   String? _errorMessage;
+  int _step = 0; // 0 = details, 1 = phone
 
   @override
   void dispose() {
+    _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  void _goToPhoneStep() {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _step = 1);
   }
 
   Future<void> _sendOtp() async {
@@ -36,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await authService.signInWithOtp(phone);
 
       if (!mounted) return;
-      context.go('/otp?phone=${Uri.encodeComponent(phone)}');
+      context.go('/otp?phone=${Uri.encodeComponent(phone)}&name=${Uri.encodeComponent(_nameController.text.trim())}');
     } catch (e) {
       setState(() {
         _errorMessage = 'حدث خطأ. تأكد من الرقم وحاول مرة أخرى';
@@ -60,84 +69,31 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 const Spacer(flex: 2),
 
-                // Real OnlyCars logo
+                // Logo
                 Center(
                   child: OcLogo(
-                    size: 120,
+                    size: 100,
                     assetPath: OcLogoAssets.vertical,
                   ),
                 ),
 
-                const SizedBox(height: OcSpacing.xxl),
+                const SizedBox(height: OcSpacing.xl),
 
-                Text(
-                  'تسجيل الدخول',
-                  style: Theme.of(context).textTheme.displaySmall,
-                  textAlign: TextAlign.center,
+                // Step indicator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _StepDot(active: true, label: '1'),
+                    Container(width: 40, height: 2, color: _step >= 1 ? OcColors.accent : OcColors.border),
+                    _StepDot(active: _step >= 1, label: '2'),
+                  ],
                 ),
 
-                const SizedBox(height: OcSpacing.sm),
+                const SizedBox(height: OcSpacing.xl),
 
-                Text(
-                  'أدخل رقم هاتفك القطري',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: OcColors.textSecondary,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: OcSpacing.xxxl),
-
-                // Phone input
-                Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    maxLength: 8,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 4,
-                    ),
-                    decoration: InputDecoration(
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.only(left: 12, right: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('🇶🇦', style: TextStyle(fontSize: 20)),
-                            SizedBox(width: 6),
-                            Text(
-                              '+974',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: OcColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-                      counterText: '',
-                      hintText: '3XXXXXXX',
-                      hintStyle: const TextStyle(
-                        color: OcColors.textSecondary,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().length != 8) {
-                        return 'أدخل رقم هاتف صحيح';
-                      }
-                      if (!RegExp(r'^[3-7]\d{7}$').hasMatch(value.trim())) {
-                        return 'رقم هاتف قطري غير صالح';
-                      }
-                      return null;
-                    },
-                  ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _step == 0 ? _buildDetailsStep() : _buildPhoneStep(),
                 ),
 
                 if (_errorMessage != null) ...[
@@ -151,16 +107,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: OcSpacing.xl),
 
+                // Action button
                 OcButton(
-                  label: 'إرسال الرمز',
-                  onPressed: _sendOtp,
+                  label: _step == 0 ? 'التالي' : 'إرسال الرمز',
+                  onPressed: _step == 0 ? _goToPhoneStep : _sendOtp,
                   isLoading: _isLoading,
-                  icon: Icons.sms_outlined,
+                  icon: _step == 0 ? Icons.arrow_back_rounded : Icons.sms_outlined,
                 ),
+
+                if (_step == 1) ...[
+                  const SizedBox(height: OcSpacing.sm),
+                  TextButton(
+                    onPressed: () => setState(() => _step = 0),
+                    child: const Text('رجوع', style: TextStyle(color: OcColors.textSecondary)),
+                  ),
+                ],
 
                 const SizedBox(height: OcSpacing.md),
 
-                // Dev skip button — remove in production
+                // Dev skip button
                 TextButton(
                   onPressed: () => context.go('/home'),
                   child: const Text(
@@ -171,7 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const Spacer(flex: 3),
 
-                // Terms
                 Text(
                   'بالمتابعة، أنت توافق على شروط الاستخدام وسياسة الخصوصية',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -181,6 +145,120 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsStep() {
+    return Column(
+      key: const ValueKey('step_details'),
+      children: [
+        Text(
+          'إنشاء حساب',
+          style: Theme.of(context).textTheme.displaySmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: OcSpacing.sm),
+        Text(
+          'أدخل بياناتك الأساسية',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: OcColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: OcSpacing.xxl),
+        TextFormField(
+          controller: _nameController,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          decoration: const InputDecoration(
+            hintText: 'الاسم الكامل',
+            prefixIcon: Icon(Icons.person_outline_rounded, color: OcColors.textMuted),
+          ),
+          validator: (v) {
+            if (v == null || v.trim().length < 2) return 'أدخل اسمك';
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhoneStep() {
+    return Column(
+      key: const ValueKey('step_phone'),
+      children: [
+        Text(
+          'تأكيد الرقم',
+          style: Theme.of(context).textTheme.displaySmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: OcSpacing.sm),
+        Text(
+          'أدخل رقم هاتفك القطري للتحقق',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: OcColors.textSecondary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: OcSpacing.xxl),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: TextFormField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            maxLength: 8,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 4),
+            decoration: InputDecoration(
+              prefixIcon: const Padding(
+                padding: EdgeInsets.only(left: 12, right: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('🇶🇦', style: TextStyle(fontSize: 20)),
+                    SizedBox(width: 6),
+                    Text('+974', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: OcColors.textSecondary)),
+                  ],
+                ),
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+              counterText: '',
+              hintText: '3XXXXXXX',
+              hintStyle: const TextStyle(color: OcColors.textSecondary, letterSpacing: 4),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().length != 8) return 'أدخل رقم هاتف صحيح';
+              if (!RegExp(r'^[3-7]\d{7}$').hasMatch(value.trim())) return 'رقم هاتف قطري غير صالح';
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Step indicator dot
+class _StepDot extends StatelessWidget {
+  final bool active;
+  final String label;
+  const _StepDot({required this.active, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28, height: 28,
+      decoration: BoxDecoration(
+        color: active ? OcColors.accent : OcColors.surfaceCard,
+        shape: BoxShape.circle,
+        border: Border.all(color: active ? OcColors.accent : OcColors.border, width: 2),
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? OcColors.onAccent : OcColors.textMuted,
           ),
         ),
       ),

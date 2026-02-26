@@ -48,19 +48,19 @@ class HomeScreen extends ConsumerWidget {
                 child: OcHeroBanner(
                   items: const [
                     OcBannerItem(
-                      title: 'اكتشف أفضل الورش',
-                      subtitle: 'ورش معتمدة بأسعار منافسة وخدمة مميزة',
-                      buttonLabel: 'تصفح الآن',
+                      title: 'خصم 50% على تغيير الزيت',
+                      subtitle: 'زيت موبيل 5W-30 أصلي + فلتر مجاناً — لفترة محدودة',
+                      buttonLabel: 'احجز الآن',
                     ),
                     OcBannerItem(
-                      title: 'سوق قطع الغيار',
-                      subtitle: 'آلاف القطع الأصلية بتوصيل سريع',
+                      title: 'كفرات ميشلان بأقل الأسعار',
+                      subtitle: 'اشترِ 3 واحصل على الرابعة مجاناً — توصيل مجاني',
                       buttonLabel: 'تسوق الآن',
                     ),
                     OcBannerItem(
-                      title: 'تشخيص ذكي',
-                      subtitle: 'احصل على تقرير شامل لحالة سيارتك',
-                      buttonLabel: 'ابدأ التشخيص',
+                      title: 'فحص شامل لسيارتك',
+                      subtitle: 'تشخيص كمبيوتر + فحص 52 نقطة ابتداءً من 99 ر.ق',
+                      buttonLabel: 'احجز فحص',
                     ),
                   ],
                 ),
